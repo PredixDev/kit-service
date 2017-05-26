@@ -1,0 +1,84 @@
+[{
+		"complexType": "AssetTag",
+		"label": "Rotary Angle",
+		"tagUri": "/tag/rotaryangle",
+		"unit": "degrees",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:rotaryangle"
+		}
+	},
+	{
+		"complexType": "AssetTag",
+		"label": "Light",
+		"tagUri": "/tag/light",
+		"unit": "lumens",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:light"
+		}
+	},
+	{
+		"complexType": "AssetTag",
+		"label": "Temperature",
+		"tagUri": "/tag/temperature",
+		"unit": "F",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:temperature"
+		}
+	},
+	{
+		"complexType": "AssetTag",
+		"label": "Button",
+		"tagUri": "/tag/button",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:button"
+		}
+	},
+	{
+		"complexType": "AssetTag",
+		"label": "Sound",
+		"tagUri": "/tag/sound",
+		"unit": "dB",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:sound"
+		}
+	},
+	{
+		"complexType": "AssetTag",
+		"label": "Vibration",
+		"tagUri": "/tag/vibration",
+		"unit": "m/s2",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:vibration"
+		}
+	},
+	{
+		"complexType": "AssetTag",
+		"label": "Touch",
+		"tagUri": "/tag/touch",
+		"unit": "psi",
+		"hiAlarmThreshold": 80,
+		"loAlarmThreshold": 65,
+		"timeseriesDatasource": {
+			"complexType": "TimeseriesDatasource",
+			"tag": "${DEVICE_ADDRESS}:touch"
+		}
+	}
+]
