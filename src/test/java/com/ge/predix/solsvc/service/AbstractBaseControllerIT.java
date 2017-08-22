@@ -28,5 +28,7 @@ import com.ge.predix.solsvc.kitservice.boot.Application;
 @IntegrationTest({"server.port=9092"})
 public abstract class AbstractBaseControllerIT 
 {
-
+	/*
+	 * 
+	 */
 }

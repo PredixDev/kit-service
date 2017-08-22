@@ -25,11 +25,11 @@ public class UserGroup
     /**
      * 
      */
-    Set<String> users = new HashSet<String>();
+    Set<String> uaaUsers = new HashSet<String>();
     /**
      * 
      */
-    Set<String> owners = new HashSet<String>();
+    Set<String> uaaOwners = new HashSet<String>();
     
     /**
      * 
@@ -56,30 +56,30 @@ public class UserGroup
     /**
      * @return the users
      */
-    public Set<String> getUsers()
+    public Set<String> getUaaUsers()
     {
-        return this.users;
+        return this.uaaUsers;
     }
     /**
      * @param users the users to set
      */
-    public void setUsers(Set<String> users)
+    public void setUaaUsers(Set<String> users)
     {
-        this.users = users;
+        this.uaaUsers = users;
     }
     /**
      * @return the owners
      */
-    public Set<String> getOwners()
+    public Set<String> getUaaOwners()
     {
-        return this.owners;
+        return this.uaaOwners;
     }
     /**
      * @param owners the owners to set
      */
-    public void setOwners(Set<String> owners)
+    public void setUaaOwners(Set<String> owners)
     {
-        this.owners = owners;
+        this.uaaOwners = owners;
     }
     
     /**

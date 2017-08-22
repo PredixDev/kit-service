@@ -13,6 +13,7 @@ package com.ge.predix.solsvc.kitservice.validator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
@@ -73,8 +74,7 @@ public class RegisterDeviceValidation implements Validator
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "deviceName", "field.required"); //$NON-NLS-1$//$NON-NLS-2$
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "deviceAddress", "field.required"); //$NON-NLS-1$//$NON-NLS-2$
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "deviceType", "field.required"); //$NON-NLS-1$//$NON-NLS-2$
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "userId", "field.required"); //$NON-NLS-1$//$NON-NLS-2$
-        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "groupRef", "field.required"); //$NON-NLS-1$//$NON-NLS-2$
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "deviceGroup", "field.required"); //$NON-NLS-1$//$NON-NLS-2$
         
         
         if(!validate(device.getDeviceName() , this.pattern)){
@@ -86,14 +86,14 @@ public class RegisterDeviceValidation implements Validator
         if(!validate(device.getDeviceType(),this.deviceTypePattern)){
             errors.rejectValue("DeviceType", "Device Type should match ^[A-Za-z0-9]*");  //$NON-NLS-1$//$NON-NLS-2$
         }
-        if(!validate(device.getGroupRef(),this.groupRefPattern)){
-            errors.rejectValue("GroupRef", "GroupRef should match ^[A-Za-z0-9-/]*");  //$NON-NLS-1$//$NON-NLS-2$
+        if(!validate(device.getDeviceGroup(),this.groupRefPattern)){
+            errors.rejectValue("GroupRef", "DeviceGroupRef should match ^[A-Za-z0-9-/]*");  //$NON-NLS-1$//$NON-NLS-2$
         }
         
-        if(DEVICE_NAME_LENGTH <= device.getDeviceName().length() ){
+        if( StringUtils.isEmpty(device.getDeviceName()) || DEVICE_NAME_LENGTH <= device.getDeviceName().length() ){
             errors.rejectValue("DeviceName", "Device Name is limited to max 50");  //$NON-NLS-1$//$NON-NLS-2$
         }
-        if( DEVICE_ADDRESS_LENGTH <= device.getDeviceAddress().length()){
+        if( StringUtils.isEmpty(device.getDeviceAddress()) || DEVICE_ADDRESS_LENGTH <= device.getDeviceAddress().length()){
             errors.rejectValue("DeviceAddress", "Device Address is limited to max 75");  //$NON-NLS-1$//$NON-NLS-2$
         }
     }
@@ -101,11 +101,14 @@ public class RegisterDeviceValidation implements Validator
 
     /**
      * @param deviceName -
-     * @param pattern 
+     * @param pattern -
      * @return -
      */
     public static boolean validate(String deviceName, Pattern pattern)
     {
+        if(StringUtils.isEmpty(deviceName) ){
+            return false;
+        }
         Matcher matcher = pattern.matcher(deviceName);
         return matcher.matches();
     }

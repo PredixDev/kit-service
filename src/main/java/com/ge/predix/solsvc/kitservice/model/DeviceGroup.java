@@ -23,27 +23,28 @@ import com.ge.predix.solsvc.bootstrap.ams.dto.Group;
  * 
  * @author 212421693 -
  */
-public class KitGroup extends Group
+public class DeviceGroup extends Group
 {
     /**
      * 
      */
-    Set<String> groupRef = new HashSet<String>();
+    Set<String> userGroup = new HashSet<String>();
+    
 
     /**
-     * @return the groupRef
+     * @return the userGroupRef
      */
-    public Set<String> getGroupRef()
+    public Set<String> getUserGroup()
     {
-        return this.groupRef;
+        return this.userGroup;
     }
 
     /**
-     * @param groupRef the groupRef to set
+     * @param userGroupRef the userGroupRef to set
      */
-    public void setGroupRef(Set<String> groupRef)
+    public void setUserGroup(Set<String> userGroupRef)
     {
-        this.groupRef = groupRef;
+        this.userGroup = userGroupRef;
     }
 
     /* (non-Javadoc)

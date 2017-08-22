@@ -39,6 +39,11 @@ public class EventError
      * timeStamp
      */
     String  timeStamp;
+    
+    /**
+     * code 
+     */
+    String code;
 
     /**
      * @param status
@@ -51,6 +56,7 @@ public class EventError
         this.status = status;
         this.error = (String) errorAttributes.get("error"); //$NON-NLS-1$
         this.message = (String) errorAttributes.get("message"); //$NON-NLS-1$
+        this.code = (String) errorAttributes.get("code"); //$NON-NLS-1$
         if(! StringUtils.isEmpty(errorAttributes.get("timestamp"))) {//$NON-NLS-1$
             this.timeStamp = errorAttributes.get("timestamp").toString(); //$NON-NLS-1$
         }

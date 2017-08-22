@@ -47,7 +47,7 @@
         tokens in requests -->
       <bean id="authenticationFilter" class="com.ge.predix.solsvc.kitservice.boot.AuthenticationFilter">
       	<!-- <property name="tokenScope" value="application-write"/> -->
-      		<property name="tokenScope" value="openid"/>
+      		<property name="tokenScope" value="predixkit.admin"/>
       </bean>  
 
     <bean id="remoteTokenServices" class="com.ge.predix.uaa.token.lib.FastTokenServices">

@@ -74,6 +74,9 @@ public class Application
     @SuppressWarnings("unused")
     private static ApplicationContext context;
   
+    /**
+     * 
+     */
     static String[] profiles ;
 
     @SuppressWarnings("javadoc")

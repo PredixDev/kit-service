@@ -25,7 +25,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.jwt.Jwt;
 import org.springframework.security.jwt.JwtHelper;
@@ -127,15 +126,17 @@ public class AuthenticationFilter
             }
 
         }
+  
         request.setAttribute("userToken", accessToken); //$NON-NLS-1$
+        request.setAttribute("isAdmin", foundScope); //$NON-NLS-1$
 
-        if ( !foundScope )
+      /*  if ( !foundScope )
         {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             throw new InsufficientAuthenticationException(
                     "Authorization header does not have the required scope to access the resource"); //$NON-NLS-1$
-        }
+        }*/
         // setting security Context
 
         chain.doFilter(req, res);

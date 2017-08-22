@@ -14,16 +14,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.constraints.Pattern;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.ge.predix.entity.asset.AssetTag;
-import com.ge.predix.solsvc.bootstrap.ams.dto.Tag;
 
 /**
  * 
  * @author 212421693 -
  */
 
+@XmlRootElement(name="device")
 public class RegisterDevice
 {
     /**
@@ -55,14 +55,22 @@ public class RegisterDevice
      * 
      */
     String activationDate;
+    
     /**
      * 
      */
-    String groupRef;
+    String expirationDate;
     /**
      * 
      */
-    private String userId;
+    
+    String deviceGroup;
+    
+    /**
+     * 
+     */
+    String userGroup;
+    
     /**
      * 
      */
@@ -73,6 +81,30 @@ public class RegisterDevice
      */
     String updateDate;
     
+    /**
+     * 
+     */
+    String ipAddress;
+    
+    /**
+     * 
+     */
+    private GeoLocation geoLocation = new GeoLocation();
+    
+    /**
+     * @return the ipAddress
+     */
+    public String getIpAddress()
+    {
+        return this.ipAddress;
+    }
+    /**
+     * @param ipAddress the ipAddress to set
+     */
+    public void setIpAddress(String ipAddress)
+    {
+        this.ipAddress = ipAddress;
+    }
     /**
      * 
      */
@@ -149,19 +181,34 @@ public class RegisterDevice
     {
         this.activationDate = activationDate;
     }
+    
     /**
-     * @return the groupRef
+     * @return the deviceGroupRef
      */
-    public String getGroupRef()
+    public String getDeviceGroup()
     {
-        return this.groupRef;
+        return this.deviceGroup;
     }
     /**
-     * @param groupRef the groupRef to set
+     * @param deviceGroupRef the deviceGroupRef to set
      */
-    public void setGroupRef(String groupRef)
+    public void setDeviceGroup(String deviceGroupRef)
     {
-        this.groupRef = groupRef;
+        this.deviceGroup = deviceGroupRef;
+    }
+    /**
+     * @return the userGroupRef
+     */
+    public String getUserGroup()
+    {
+        return this.userGroup;
+    }
+    /**
+     * @param userGroupRef the userGroupRef to set
+     */
+    public void setUserGroup(String userGroupRef)
+    {
+        this.userGroup = userGroupRef;
     }
     /**
      * @return the createdDate
@@ -191,31 +238,18 @@ public class RegisterDevice
     {
         this.tags = tags;
     }
-    /**
-     * @return the userId
-     */
-    public String getUserId()
-    {
-        return this.userId;
-    }
-    /**
-     * @param userId the userId to set
-     */
-    public void setUserId(String userId)
-    {
-        this.userId = userId;
-    }
+    
     /**
      * @return the deviceConfig
      */
-    public Map getDeviceConfig()
+    public Map<?, ?> getDeviceConfig()
     {
         return this.deviceConfig;
     }
     /**
      * @param deviceConfig the deviceConfig to set
      */
-    public void setDeviceConfig(Map deviceConfig)
+    public void setDeviceConfig(Map<?, ?> deviceConfig)
     {
         this.deviceConfig = deviceConfig;
     }
@@ -232,6 +266,36 @@ public class RegisterDevice
     public void setUpdateDate(String updateDate)
     {
         this.updateDate = updateDate;
+    }
+	
+    /**
+     * 
+     * @return -
+     */
+	public String getExpirationDate() {
+		return this.expirationDate;
+	}
+	
+	/**
+	 * 
+	 * @param expirationDate -
+	 */
+	public void setExpirationDate(String expirationDate) {
+		this.expirationDate = expirationDate;
+	}
+    /**
+     * @return the geLocation
+     */
+    public GeoLocation getGeoLocation()
+    {
+        return this.geoLocation;
+    }
+    /**
+     * @param geLocation the geLocation to set
+     */
+    public void setGeoLocation(GeoLocation geLocation)
+    {
+        this.geoLocation = geLocation;
     }
     
     

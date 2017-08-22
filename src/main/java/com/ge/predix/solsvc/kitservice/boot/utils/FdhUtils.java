@@ -10,6 +10,9 @@
  
 package com.ge.predix.solsvc.kitservice.boot.utils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.ge.predix.entity.assetfilter.AssetFilter;
@@ -87,9 +90,10 @@ public class FdhUtils
      * @param userId -
      * @param deviceAddress -
      * @return -
+     * @throws UnsupportedEncodingException -
      */
     public static GetFieldDataRequest createGetUserDeviceRequest(String filterFieldValue, String expectedDataType, String userId,
-            String deviceAddress)
+            String deviceAddress) throws UnsupportedEncodingException
     {
         GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
 
@@ -110,9 +114,11 @@ public class FdhUtils
             assetFilter.setFilterString("deviceAddress="+deviceAddress); //$NON-NLS-1$ 
         }
         else if(StringUtils.isEmpty(deviceAddress)) {
-            assetFilter.setFilterString("userId="+userId); //$NON-NLS-1$
+            String encodedUrl = URLEncoder.encode("uaaUsers="+userId+"<userGroup","UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            assetFilter.setFilterString(encodedUrl); 
         } else {
-            assetFilter.setFilterString("userId="+userId+":deviceAddress="+deviceAddress); //$NON-NLS-1$ //$NON-NLS-2$
+           String encodedUrl = URLEncoder.encode("uaaUsers="+userId+"<userGroup:deviceAddress="+deviceAddress,"UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            assetFilter.setFilterString(encodedUrl); 
         }
 
         // SELECT
@@ -160,7 +166,7 @@ public class FdhUtils
 
 /**
  * @param userGroupRef -
- * @param groupRef -
+ * @param deviceGroupRef -
  * @param expectedDataType -
  * @param userId -
  * @return -
@@ -181,8 +187,45 @@ public static GetFieldDataRequest createGetUserGroupRequest(String userGroupRef,
     // FILTER
     AssetFilter assetFilter = new AssetFilter();
     assetFilter.setUri(userGroupRef);
-    assetFilter.setFilterString("users="+userId); //$NON-NLS-1$
+    
+    if(StringUtils.isNotEmpty(userId)) {
+        assetFilter.setFilterString("uaaUsers="+userId); //$NON-NLS-1$
+    }
   
+    // SELECT
+    fieldDataCriteria.getFieldSelection().add(fieldSelection);
+    // WHERE
+    fieldDataCriteria.setFilter(assetFilter);
+
+    getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
+    return getFieldDataRequest;
+}
+
+/**
+ * 
+ * @param filterFieldValue -
+ * @param expectedDataType -
+ * @return GetFieldDataRequest
+ * @throws UnsupportedEncodingException -
+ */
+public static GetFieldDataRequest createGetAdminDeviceRequest(String filterFieldValue, String expectedDataType) throws UnsupportedEncodingException
+{
+    GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
+
+    FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
+
+    // SELECT
+    FieldSelection fieldSelection = new FieldSelection();
+    FieldIdentifier fieldIdentifier = new FieldIdentifier();
+    fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by the system
+    fieldSelection.setFieldIdentifier(fieldIdentifier);
+    fieldSelection.setExpectedDataType(expectedDataType);
+
+    // FILTER
+    AssetFilter assetFilter = new AssetFilter();
+    assetFilter.setUri(filterFieldValue);
+   
+   
     // SELECT
     fieldDataCriteria.getFieldSelection().add(fieldSelection);
     // WHERE

@@ -24,3 +24,4 @@ env:
    logging_level_root: INFO
    logging_level_org_springframework: INFO
    logging_level_com_ge_predix_solsvc: DEBUG
+

@@ -20,3 +20,8 @@ env:
    KIT_CLOUD_APP_URL : {kitCloudUrl}
    JAVA_DOCS_URL : https://predixdev.github.io/kit-service
    kit_device_credentials : {deviceEncodedClient}
+   #logging - see application-cloud.properties
+   logging_level_root: INFO
+   logging_level_org_springframework: INFO
+   logging_level_com_ge_predix_solsvc: DEBUG
+

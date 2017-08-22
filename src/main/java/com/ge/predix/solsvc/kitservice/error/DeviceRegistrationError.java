@@ -41,7 +41,6 @@ public class DeviceRegistrationError extends Exception
             boolean writableStackTrace)
     {
         super(message, cause, enableSuppression, writableStackTrace);
-        // TODO Auto-generated constructor stub
     }
 
     /**

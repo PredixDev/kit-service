@@ -12,19 +12,20 @@ package com.ge.predix.solsvc.kitservice.manager;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
@@ -51,6 +52,7 @@ import com.ge.predix.entity.putfielddata.PutFieldDataResult;
 import com.ge.predix.solsvc.fdh.handler.PutDataHandler;
 import com.ge.predix.solsvc.kitservice.boot.utils.FdhUtils;
 import com.ge.predix.solsvc.kitservice.error.DeviceRegistrationError;
+import com.ge.predix.solsvc.kitservice.model.DeviceGroup;
 import com.ge.predix.solsvc.kitservice.model.RegisterDevice;
 import com.ge.predix.solsvc.kitservice.model.UserGroup;
 import com.ge.predix.solsvc.restclient.config.IOauthRestConfig;
@@ -66,7 +68,7 @@ public class DeviceManager extends BaseManager
 {
     private static final Logger log          = LoggerFactory.getLogger(DeviceManager.class);
     private static final String DEVICE = "device"; //$NON-NLS-1$
-    private static final String GROUP = "group"; //$NON-NLS-1$
+    private static final String DEVICEGROUP = "deviceGroup"; //$NON-NLS-1$
    
     
     @Autowired
@@ -102,6 +104,11 @@ public class DeviceManager extends BaseManager
     @Value("${kit.device.credentials:null}")
     String deviceCredentials; 
     
+    @SuppressWarnings("javadoc")
+    @Value("${kit.device.artifactory.url:null}")
+    String artifactoryConfigUrl; 
+    
+    
     
     
   /**
@@ -120,14 +127,15 @@ public class DeviceManager extends BaseManager
     /**
      * Registers a device
      * @param device -
+     * @param userId -
      * @return RegisterDevice
      * @throws DeviceRegistrationError -
      */
-    public RegisterDevice registerDevice(RegisterDevice device) throws DeviceRegistrationError
+    public RegisterDevice registerDevice(RegisterDevice device, String userId) throws DeviceRegistrationError
     {
         // reactivation TBD 
-        log.info("Calling registerDevice for device="+device.getUri()+" User = "+device.getUserId()); //$NON-NLS-1$ //$NON-NLS-2$
-        return createorUpdateDevice(device);
+        log.info("Calling registerDevice for device="+device.getUri()+" User = "+userId); //$NON-NLS-1$ //$NON-NLS-2$
+        return createorUpdateDevice(device,userId);
     }
    
    
@@ -136,11 +144,11 @@ public class DeviceManager extends BaseManager
      * @return RegisterDevice
      * @throws DeviceRegistrationError 
      */
-    private RegisterDevice createorUpdateDevice(RegisterDevice device) throws DeviceRegistrationError
+    private RegisterDevice createorUpdateDevice(RegisterDevice device, String userId) throws DeviceRegistrationError
     {
        
         List<Header> headers = getServiceHeaders();
-        log.debug("In here to get Service Headers "+this.jsonMapper.toJson(device));
+       // log.debug("In here to get Service Headers "+this.jsonMapper.toJson(device));
         if(StringUtils.isEmpty(device.getUri())){
             device.setUri("/"+DEVICE+"/"+device.getDeviceAddress()); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -156,9 +164,11 @@ public class DeviceManager extends BaseManager
             device.setActivationDate(String.valueOf(Instant.now().toEpochMilli()));
         }
         
-        if(!StringUtils.isEmpty(device.getGroupRef()) && !device.getGroupRef().startsWith("/group")){ //$NON-NLS-1$
-            String groupRef= device.getGroupRef();
-            device.setGroupRef("/"+GROUP+"/"+groupRef); //$NON-NLS-1$ //$NON-NLS-2$
+        if(!StringUtils.isEmpty(device.getDeviceGroup()) && !device.getDeviceGroup().toLowerCase().startsWith("/devicegroup")){ //$NON-NLS-1$
+            String groupRef= device.getDeviceGroup();
+            device.setDeviceGroup("/"+DEVICEGROUP+"/"+groupRef); //$NON-NLS-1$ //$NON-NLS-2$
+        } else if (!StringUtils.isEmpty(device.getDeviceGroup()) && device.getDeviceGroup().contains("group")) { //$NON-NLS-1$
+            device.getDeviceGroup().replaceFirst("group", DEVICEGROUP); //$NON-NLS-1$
         }
         
         
@@ -166,13 +176,41 @@ public class DeviceManager extends BaseManager
         List<AssetTag> tags = getDefaultTags(device.getDeviceAddress());
         device.setTags(new HashSet<AssetTag>(tags));
        
-        // User and user group
-        UserGroup userGroup = this.groupManagementService.getOrCreateUserGroup(headers,device.getUserId());
-        String  userGroupString = this.groupManagementService.getUserGroupString(userGroup);
-        String group = this.groupManagementService.getOrCreateGroup(headers,userGroup.getUri(),device.getGroupRef());
+        // User and user group , device group
+        //1. Check if the userGroup exists for the device
+        //2. if userGroup, then add userId to users only, if not both places owner and users
+        //3. add this new userGroup to list of device-group. userGroup list. 
+        //4. check if the deviceGroup name exists if yes use it add userGroup to the list
+        //5 .update the device with deviceGroup and userGroup.
         
-        log.debug("With group"+group + "userGroup" + userGroupString); //$NON-NLS-1$ //$NON-NLS-2$
+        UserGroup userGroup = null;
+        if(!StringUtils.isEmpty(device.getUserGroup())) { 
+             userGroup = this.groupManagementService.getUserGroup(device.getUserGroup(),headers);
+        }
+        if( userGroup !=null  ) {
+            // this means that user group found adding the user to this user group
+            userGroup.getUaaUsers().add(userId);
+            userGroup.setUpdatedDate(String.valueOf(Instant.now().toEpochMilli()));
+        } else {
+            // user group not found creating a new userGroup adding user as a owner
+            userGroup = this.groupManagementService.createUserGroup(userId);
+        }
+        device.setUserGroup(userGroup.getUri());
+        //****END user group setup
        
+        DeviceGroup deviceGroup = null;
+        if(!StringUtils.isEmpty(device.getDeviceGroup())) { 
+            deviceGroup = this.groupManagementService.getDeviceGroup(headers,device.getDeviceGroup());
+       } 
+        if( deviceGroup == null ){
+            // this means that device group not ** found adding the user to this user group
+            deviceGroup = this.groupManagementService.createDeviceGroup(device.getDeviceGroup(),userGroup.getUri());
+        }
+        
+        
+        String  userGroupString = this.groupManagementService.getUserGroupString(userGroup);
+        String group = this.groupManagementService.getDeviceGroupString(deviceGroup);
+        log.debug("With devicegroup"+deviceGroup.getUri() + "userGroup" + userGroupString); //$NON-NLS-1$ //$NON-NLS-2$
         
         List<Object> kitModels = new ArrayList<>();
         kitModels.add(device);
@@ -183,8 +221,7 @@ public class DeviceManager extends BaseManager
         log.debug(this.jsonMapper.toJson(result));
         if ( !CollectionUtils.isEmpty(result.getErrorEvent()) )
         {
-            log.info("Error: registering/Updating Device"); //$NON-NLS-1$
-            //TBD: do something
+            log.error("Error: registering/Updating Device for With devicegroup"+deviceGroup.getUri() + "userGroup" + userGroupString +" for User with Id" + userId); //$NON-NLS-1$ //$NON-NLS-2$
            throw new DeviceRegistrationError(result.getErrorEvent().get(0));
         }
         return device;
@@ -197,14 +234,34 @@ public class DeviceManager extends BaseManager
      */
     private RegisterDevice getDeviceInfoFromData(Data predixString)
     {
+        RegisterDevice device = null;
         PredixString data = (PredixString) predixString;
         String deviceString = StringEscapeUtils.unescapeJava(data.getString());
         deviceString = deviceString.substring(1, deviceString.length() - 1);
         deviceString = deviceString.substring(0, deviceString.length());
         List<RegisterDevice> registeredDevice = this.jsonMapper.fromJsonArray("["+deviceString+"]", RegisterDevice.class); //$NON-NLS-1$ //$NON-NLS-2$
-        if(CollectionUtils.isNotEmpty(registeredDevice)) 
-            return registeredDevice.get(0);
-        return null;
+        if(CollectionUtils.isNotEmpty(registeredDevice))  {
+            device = registeredDevice.get(0);
+            if(device.getActivationDate() == null ) {
+                device.setExpirationDate(calculateExpiryDate(String.valueOf(Instant.now().toEpochMilli())));
+            } else {
+                device.setExpirationDate(calculateExpiryDate(device.getActivationDate()));
+            }
+        }
+            
+        return device;
+    }
+    
+    /**
+     * 
+     * @param activatationDate
+     * @return -
+     */
+   private String calculateExpiryDate(String activatationDate) {
+       Date date = new Date();
+       date.setTime(Long.valueOf(activatationDate));
+       Date expiry = DateUtils.addDays(date, Integer.valueOf(this.deactivationPeriod));
+       return String.valueOf(expiry.getTime());
     }
   
   
@@ -242,6 +299,7 @@ public class DeviceManager extends BaseManager
     public List<RegisterDevice> getDevices(String userId)
     {
         log.info("Calling get All Device for"); //$NON-NLS-1$
+        
         return getDevice(userId); 
     }
     
@@ -257,14 +315,23 @@ public class DeviceManager extends BaseManager
         log.info("Calling getDevice"); //$NON-NLS-1$
         List<RegisterDevice> devices= new ArrayList <RegisterDevice>();
         List<Header> headers = getServiceHeaders();
-        GetFieldDataRequest request = FdhUtils.createGetUserDeviceRequest("/"+DEVICE, "PredixString",userId,null); //$NON-NLS-1$ //$NON-NLS-2$
-        List<FieldData> fieldDatas= getFieldDataResult(request,headers);
-        
-        if(CollectionUtils.isNotEmpty(fieldDatas)) {
-            for(FieldData fieldData:fieldDatas){
-                devices.add( getDeviceInfoFromData(fieldData.getData()));
+        GetFieldDataRequest request;
+        try
+        {
+            request = FdhUtils.createGetUserDeviceRequest("/"+DEVICE, "PredixString",userId,null);  //$NON-NLS-1$//$NON-NLS-2$
+            List<FieldData> fieldDatas= getFieldDataResult(request,headers);
+            
+            if(CollectionUtils.isNotEmpty(fieldDatas)) {
+                for(FieldData fieldData:fieldDatas){
+                    devices.add( getDeviceInfoFromData(fieldData.getData()));
+                }
             }
+            
         }
+        catch (UnsupportedEncodingException e)
+        {
+            log.info("Error with decoding the String Asset filter "+e.toString(),e); //$NON-NLS-1$
+        } 
         
         return devices;
     }
@@ -284,12 +351,24 @@ public class DeviceManager extends BaseManager
         log.info("Calling getDevice by user and device address"); //$NON-NLS-1$
         RegisterDevice device =null;
         List<Header> headers = getServiceHeaders();
-        GetFieldDataRequest request = FdhUtils.createGetUserDeviceRequest(deviceIdentifier, "PredixString",userId,deviceAddress); //$NON-NLS-1$
-        List<FieldData> fieldData = getFieldDataResult(request,headers);
-        if(CollectionUtils.isNotEmpty(fieldData)) {
-            return getDeviceInfoFromData(fieldData.get(0).getData());
+        GetFieldDataRequest request;
+        try
+        {
+            request = FdhUtils.createGetUserDeviceRequest(deviceIdentifier, "PredixString",userId,deviceAddress);//$NON-NLS-1$
+            List<FieldData> fieldData = getFieldDataResult(request,headers);
+            if(CollectionUtils.isNotEmpty(fieldData)) {
+                device = getDeviceInfoFromData(fieldData.get(0).getData());
+            }
         }
+        catch (UnsupportedEncodingException e)
+        {
+           
+            log.info("Error with decoding the String Asset filter "+e.toString(),e); //$NON-NLS-1$
+  
+        } 
+        
         return device;
+        
     }
     
   
@@ -345,6 +424,7 @@ public class DeviceManager extends BaseManager
         deviceConfig.put("predixTimeSeriesZoneid", this.timeseriesConfig.getZoneId());
         deviceConfig.put("deviceDeactivationPeriod", this.deactivationPeriod);
         deviceConfig.put("cloudApplicationUrl", this.kitApplicationUrl);
+        deviceConfig.put("artifactoryConfigUrl", this.artifactoryConfigUrl);
         return deviceConfig;
         
     }
@@ -353,23 +433,32 @@ public class DeviceManager extends BaseManager
     /**
      * @param device -
      * @param originalDevice  -
+     * @param userId -
      * @throws DeviceRegistrationError -
      */
-    public void updateDevice(RegisterDevice device, RegisterDevice originalDevice) throws DeviceRegistrationError
+    public void updateDevice(RegisterDevice device, RegisterDevice originalDevice , String userId) throws DeviceRegistrationError
     {
-        log.info("Calling updateDevice for device="+device.getUri()+" User = "+device.getUserId()); //$NON-NLS-1$ //$NON-NLS-2$
+        log.info("Calling updateDevice for device="+originalDevice.getUri()+" User = "+userId); //$NON-NLS-1$ //$NON-NLS-2$
         
         if(StringUtils.isNotEmpty(device.getDeviceName()) && ! originalDevice.getDeviceName().equalsIgnoreCase(device.getDeviceName())) {
             originalDevice.setDeviceName(device.getDeviceName());
         }
-        if(StringUtils.isNotEmpty(device.getGroupRef()) && ! originalDevice.getGroupRef().equalsIgnoreCase(device.getGroupRef())) {
-            originalDevice.setGroupRef(device.getGroupRef());
+        if(StringUtils.isNotEmpty(device.getDeviceGroup()) && ! originalDevice.getDeviceGroup().equalsIgnoreCase(device.getDeviceGroup())) {
+            originalDevice.setDeviceGroup(device.getDeviceGroup());
         }
         if(CollectionUtils.isNotEmpty(device.getTags())) {
             originalDevice.getTags().addAll(device.getTags());
         }
+        if(device.getGeoLocation() !=null && StringUtils.isNotEmpty(device.getGeoLocation().getLatitude())) {
+            originalDevice.getGeoLocation().setLatitude(device.getGeoLocation().getLatitude());
+        }
+        if(device.getGeoLocation() !=null && StringUtils.isNotEmpty(device.getGeoLocation().getLongitude())) {
+            originalDevice.getGeoLocation().setLongitude(device.getGeoLocation().getLongitude());
+        }
+        
+        
         originalDevice.setUpdateDate(String.valueOf(Instant.now().toEpochMilli()));
-        this.createorUpdateDevice(originalDevice);
+        this.createorUpdateDevice(originalDevice,userId);
     }
 
     /**
@@ -378,19 +467,67 @@ public class DeviceManager extends BaseManager
      */
     public void checkDeviceExpiry(RegisterDevice device) throws DeviceRegistrationError
     {
-       Long currentTime = Instant.now().toEpochMilli();
-       //Date currentDate = new Date(currentTime);
-       Long activationTime = Long.valueOf(device.getActivationDate());
-      // Date activationDate = new Date(activationTime);
+    	Long currentTime = Instant.now().toEpochMilli();
+        //Date currentDate = new Date(currentTime);
+        Long activationTime = Long.valueOf(device.getActivationDate());
+       // Date activationDate = new Date(activationTime);
+        
+        DateTime currentDate = new DateTime(currentTime);
+        DateTime activationDate = new DateTime(activationTime);
+        
+        int days = Days.daysBetween(currentDate, activationDate).getDays();
        
-       DateTime currentDate = new DateTime(currentTime);
-       DateTime activationDate = new DateTime(activationTime);
-       
-       int days = Days.daysBetween(currentDate, activationDate).getDays();
-       
-       if(Math.abs(days) > Integer.valueOf(this.deactivationPeriod)){
-           throw new DeviceRegistrationError("Device has past its activation period."); //$NON-NLS-1$
-       }
-       
+        
+        if(Math.abs(days) > Integer.valueOf(this.deactivationPeriod)){
+            throw new DeviceRegistrationError("Device has past its activation period."); //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * @param device -
+     * @param isAdmin - 
+     * @param userid -
+     * @throws DeviceRegistrationError  -
+     */
+    public void resetDevice(RegisterDevice device, Boolean isAdmin, String userid) throws DeviceRegistrationError
+    {
+        if(isAdmin) {
+            log.info("DeviceManager: admin access... resetting device"+device.getUri()); //$NON-NLS-1$
+                device.setUpdateDate(String.valueOf(Instant.now().toEpochMilli()));
+                device.setActivationDate(device.getUpdateDate());
+                createorUpdateDevice(device,userid);
+        }
+        
+    }
+
+    /**
+     *  -
+     * @return -
+     */
+    public List<RegisterDevice> getAllAdminDevices()
+    {
+        log.info("Calling getAdminDevice"); //$NON-NLS-1$
+        List<RegisterDevice> devices= new ArrayList <RegisterDevice>();
+        List<Header> headers = getServiceHeaders();
+        GetFieldDataRequest request;
+        try
+        {
+            request = FdhUtils.createGetAdminDeviceRequest("/"+DEVICE, "PredixString");  //$NON-NLS-1$//$NON-NLS-2$
+            List<FieldData> fieldDatas= getFieldDataResult(request,headers);
+            
+            if(CollectionUtils.isNotEmpty(fieldDatas)) {
+                for(FieldData fieldData:fieldDatas){
+                    devices.add( getDeviceInfoFromData(fieldData.getData()));
+                }
+            }
+            
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            log.info("Error with decoding the String Asset filter "+e.toString(),e); //$NON-NLS-1$
+        } 
+        
+        return devices;
+        
     }
 }
