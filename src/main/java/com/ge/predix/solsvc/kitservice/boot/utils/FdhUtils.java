@@ -33,6 +33,8 @@ import com.ge.predix.entity.putfielddata.PutFieldDataRequest;
 public class FdhUtils
 {
     
+    private static final int DEFAULT_ASSET_PAGESIZE = 1000;
+    
     
   /**
    * 
@@ -115,10 +117,10 @@ public class FdhUtils
         }
         else if(StringUtils.isEmpty(deviceAddress)) {
             String encodedUrl = URLEncoder.encode("uaaUsers="+userId+"<userGroup","UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            assetFilter.setFilterString(encodedUrl); 
+            assetFilter.setFilterString(encodedUrl+"&pageSize="+DEFAULT_ASSET_PAGESIZE);  //$NON-NLS-1$
         } else {
            String encodedUrl = URLEncoder.encode("uaaUsers="+userId+"<userGroup:deviceAddress="+deviceAddress,"UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            assetFilter.setFilterString(encodedUrl); 
+            assetFilter.setFilterString(encodedUrl+"&pageSize="+DEFAULT_ASSET_PAGESIZE);  //$NON-NLS-1$
         }
 
         // SELECT
@@ -152,7 +154,7 @@ public class FdhUtils
 
         // FILTER
         AssetFilter assetFilter = new AssetFilter();
-        assetFilter.setUri(groupRef);
+        assetFilter.setUri(groupRef+"?pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
         
         // SELECT
         fieldDataCriteria.getFieldSelection().add(fieldSelection);
@@ -186,11 +188,16 @@ public static GetFieldDataRequest createGetUserGroupRequest(String userGroupRef,
 
     // FILTER
     AssetFilter assetFilter = new AssetFilter();
-    assetFilter.setUri(userGroupRef);
     
     if(StringUtils.isNotEmpty(userId)) {
-        assetFilter.setFilterString("uaaUsers="+userId); //$NON-NLS-1$
+        assetFilter.setFilterString("uaaUsers="+userId+"&pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$ //$NON-NLS-2$
+        assetFilter.setUri(userGroupRef);
+    }else {
+        assetFilter.setUri(userGroupRef+"?pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
     }
+   
+    
+   
   
     // SELECT
     fieldDataCriteria.getFieldSelection().add(fieldSelection);
@@ -223,7 +230,7 @@ public static GetFieldDataRequest createGetAdminDeviceRequest(String filterField
 
     // FILTER
     AssetFilter assetFilter = new AssetFilter();
-    assetFilter.setUri(filterFieldValue);
+    assetFilter.setUri(filterFieldValue+"?pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
    
    
     // SELECT
@@ -234,4 +241,5 @@ public static GetFieldDataRequest createGetAdminDeviceRequest(String filterField
     getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
     return getFieldDataRequest;
 }
+
 }
