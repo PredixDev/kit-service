@@ -5,7 +5,7 @@
 
 	<groupId>com.ge.predix.solsvc</groupId>
 	<artifactId>kit-service</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.6</version>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -27,8 +27,8 @@
 		<jacoco.version>0.7.2.201409121644</jacoco.version>
 		<springfox.version>2.5.0</springfox.version>
 		<uaa-lib.version>3.2.2</uaa-lib.version>
-		<fdh-asset-handler.version>2.0.22</fdh-asset-handler.version>
-		<timeseries-bootstrap.version>2.1.23</timeseries-bootstrap.version>
+		<fdh-asset-handler.version>2.0.23</fdh-asset-handler.version>
+		<timeseries-bootstrap.version>2.1.24</timeseries-bootstrap.version>
 		<logback.version>1.1.3</logback.version>
 		<groovy.version>2.3.5</groovy.version>
 		<httpclient.version>4.5.2</httpclient.version>
