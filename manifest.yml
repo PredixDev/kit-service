@@ -2,7 +2,7 @@
 applications:
   - name: {your-name}-kit-service
     buildpack: java_buildpack
-    path: target/kit-service-1.0.6.jar
+    path: target/kit-service-1.0.9.jar
     memory: 512M
     timeout : 180
 services:

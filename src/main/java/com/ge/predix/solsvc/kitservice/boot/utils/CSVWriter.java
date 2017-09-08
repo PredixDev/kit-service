@@ -1,26 +1,28 @@
 package com.ge.predix.solsvc.kitservice.boot.utils;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import com.ge.predix.entity.asset.AssetTag;
 import com.ge.predix.solsvc.kitservice.model.RegisterDevice;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateExceptionHandler;
 
 /**
  * 
@@ -29,51 +31,53 @@ import com.ge.predix.solsvc.kitservice.model.RegisterDevice;
 @Component
 public class CSVWriter {
 	 
-	//Delimiter used in CSV file
-	private String NEW_LINE_SEPARATOR = "\n"; //$NON-NLS-1$
 	
-	@Value("${kit.device.export.asset.properties}")
-	private String assetProperties;
+	@Autowired
+    private
+    ResourceLoader resourceLoader;
 	
-	@Value("${kit.device.export.assettag.properties}")
-	private String assetTagProperties;
+	/**
+	 * Free marker Configuration 
+	 */
+	Configuration cfg = null;
 	
-	@Value("${kit.device.export.assettag.timeseriesdatasource.properties}")
-	private String assetTagTimeSeriesDataSourceProperties;
-	
-	
-	private Object [] FILE_HEADER_ASSET = {"uri", //$NON-NLS-1$
-			"userGroup", //$NON-NLS-1$
-			"latitude", //$NON-NLS-1$
-			"longitude", //$NON-NLS-1$
-			"updateDate", //$NON-NLS-1$
-			"expirationDate", //$NON-NLS-1$
-			"deviceType", //$NON-NLS-1$
-			"deviceName", //$NON-NLS-1$
-			"deviceGroup", //$NON-NLS-1$
-			"deviceAddress", //$NON-NLS-1$
-			"createdDate", //$NON-NLS-1$
-			"activationDate"}; //$NON-NLS-1$
-	private Object [] FILE_HEADER_TAG = {"deviceURI", //$NON-NLS-1$
-			"tagUri", //$NON-NLS-1$
-			"label", //$NON-NLS-1$
-			"isKpi", //$NON-NLS-1$
-			"unit", //$NON-NLS-1$
-			"hiQualityThreshold", //$NON-NLS-1$
-			"hiAlarmThreshold", //$NON-NLS-1$
-			"loAlarmThreshold", //$NON-NLS-1$
-			"loQualityThreshold", //$NON-NLS-1$
-			"lastCalibrated", //$NON-NLS-1$
-			"locationUUID", //$NON-NLS-1$
-			"alertStatusUri"}; //$NON-NLS-1$
 	
 	/**
 	 *  -
 	 */
 	@PostConstruct
 	public void activate() {
-		this.FILE_HEADER_ASSET = this.assetProperties.replaceAll(", ", ",").split(","); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		this.FILE_HEADER_TAG = this.assetTagProperties.replaceAll(", ", ",").split(","); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		
+			// Create your Configuration instance, and specify if up to what FreeMarker
+			// version (here 2.3.25) do you want to apply the fixes that are not 100%
+			// backward-compatible. See the Configuration JavaDoc for details.
+			this.cfg = new Configuration(Configuration.VERSION_2_3_25);
+
+			// Specify the source where the template files come from. Here I set a
+			// plain directory for it, but non-file-system sources are possible too:
+			Resource resource = this.resourceLoader.getResource("classpath:export"); //$NON-NLS-1$
+			try {
+				File dbAsFile = resource.getFile();
+				
+				this.cfg.setDirectoryForTemplateLoading(dbAsFile);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// Set the preferred charset template files are stored in. UTF-8 is
+			// a good choice in most applications:
+			this.cfg.setDefaultEncoding("UTF-8"); //$NON-NLS-1$
+
+			// Sets how errors will appear.
+			// During web page *development* TemplateExceptionHandler.HTML_DEBUG_HANDLER is better.
+			this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+
+			// Don't log exceptions inside FreeMarker that it will thrown at you anyway:
+			this.cfg.setLogTemplateExceptions(false);
+			
+			this.cfg.setDateTimeFormat("MM/dd/yyyy hh:mm:ss a"); //$NON-NLS-1$
+		
 	}
 	/**
 	 * @param devices -
@@ -81,81 +85,24 @@ public class CSVWriter {
 	 * @throws IOException -
 	 */
 	public String getAssetCSV(List<RegisterDevice> devices) {
+		Map<String, Object> root = new HashMap<>();
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a"); //$NON-NLS-1$
+		root.put("devices", devices); //$NON-NLS-1$
+		
 		StringWriter deviceWriter = new StringWriter();
-		CSVFormat csvFileFormatDevice = CSVFormat.DEFAULT.withRecordSeparator(this.NEW_LINE_SEPARATOR);
-		try (CSVPrinter assetPrinter = new CSVPrinter(deviceWriter,csvFileFormatDevice);){
-			assetPrinter.printRecord(this.FILE_HEADER_ASSET);
-			for (RegisterDevice device:devices) {
-					List<Object> record = new ArrayList<Object>();
-					for (Object key:this.FILE_HEADER_ASSET) {
-						if ("latitude".equals(key.toString()) || "longitude".equals(key.toString()) || PropertyUtils.isReadable(device, key.toString())) { //$NON-NLS-1$ //$NON-NLS-2$
-							try {
-								switch(key.toString()) {
-									case "updateDate" : //$NON-NLS-1$
-									case "expirationDate" : //$NON-NLS-1$
-									case "createdDate" : //$NON-NLS-1$
-									case "activationDate" : //$NON-NLS-1$
-										record.add(sdf.format(new Date(Long.valueOf(PropertyUtils.getProperty(device, key.toString()).toString()))));
-										break;
-									case "latitude": //$NON-NLS-1$
-										record.add(device.getGeoLocation().getLatitude());
-										break;
-									case "longitude": //$NON-NLS-1$
-										record.add(device.getGeoLocation().getLongitude());
-										break;
-									default:
-										record.add(PropertyUtils.getProperty(device, key.toString()).toString());
-								}
-							} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-								throw new RuntimeException("Exception when reading Device",e); //$NON-NLS-1$
-							}
-						}
-					}
-					assetPrinter.printRecord(record);
-				
-			}
-		} catch (IOException e) {
-			throw new RuntimeException("Exception when creating csv file for Device ",e); //$NON-NLS-1$
+		try {
+			Template temp = this.cfg.getTemplate("export_asset.csv"); //$NON-NLS-1$
+			temp.process(root, deviceWriter);
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
 		}
-		
-		
 		StringWriter tagWriter = new StringWriter();
-		CSVFormat csvFileFormatTag = CSVFormat.DEFAULT.withRecordSeparator(this.NEW_LINE_SEPARATOR);
-		try (CSVPrinter tagPrinter = new CSVPrinter(tagWriter,csvFileFormatTag);){
-			tagPrinter.printRecord(this.FILE_HEADER_TAG);
-			for (RegisterDevice device:devices) {
-				for (AssetTag tag:device.getTags()) {
-					List<Object> record = new ArrayList<Object>();
-					record.add(device.getUri());
-					for (Object key:this.FILE_HEADER_TAG) {
-						if ("tag".equals(key.toString()) || PropertyUtils.isReadable(tag, key.toString())) {  //$NON-NLS-1$
-							try {
-								switch(key.toString()) {
-									case "tag" : //$NON-NLS-1$
-										record.add(tag.getTimeseriesDatasource().getTag());
-										break;
-									default:
-										Object value = PropertyUtils.getProperty(tag, key.toString());
-										if (value != null) {
-											record.add(value.toString());
-										}else{
-											record.add(""); //$NON-NLS-1$
-										}
-								}
-							} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-								throw new RuntimeException("Exception when reading AssetTag",e); //$NON-NLS-1$
-							}
-						}
-					}
-					tagPrinter.printRecord(record);
-				}
-			}
-		} catch (IOException e) {
-			throw new RuntimeException("Exception when creating csv file for Asset Tags",e); //$NON-NLS-1$
+		try {
+			Template temp = this.cfg.getTemplate("export_assettag.csv"); //$NON-NLS-1$
+			temp.process(root, tagWriter);
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
 		}
-		
 		
 		String zipFileName = "AssetModel.zip"; //$NON-NLS-1$
 		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));){
