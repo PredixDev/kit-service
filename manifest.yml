@@ -2,7 +2,7 @@
 applications:
   - name: {your-name}-kit-service
     buildpack: java_buildpack
-    path: target/kit-service-1.0.9.jar
+    path: target/kit-service-1.0.14.jar
     memory: 512M
     timeout : 180
 services:
@@ -23,5 +23,5 @@ env:
    #logging - see application-cloud.properties
    logging_level_root: INFO
    logging_level_org_springframework: INFO
-   logging_level_com_ge_predix_solsvc: DEBUG
+   logging_level_com_ge_predix_solsvc: INFO
 

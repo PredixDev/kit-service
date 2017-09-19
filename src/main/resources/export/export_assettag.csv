@@ -1,4 +1,4 @@
-deviceURI,tagUri,label,isKpi,unit,hiQualityThreshold,hiAlarmThreshold,loAlarmThreshold,loQualityThreshold,lastCalibrated,locationUUID,alertStatusUri,tag
+deviceURI,tagUri,label,isKpi,unit,hiQualityThreshold,hiAlarmThreshold,loAlarmThreshold,loQualityThreshold,lastCalibrated,locationUUID,alertStatusUri,tag,latestDatapoint,latestDatapointTime
 <#list devices as device>
 <#list device.tags as assetTag>
 ${device.uri},${assetTag.tagUri?if_exists},${assetTag.label?if_exists},${assetTag.isKpi?if_exists},${assetTag.unit?if_exists},${assetTag.hiQualityThreshold?if_exists},${assetTag.hiAlarmThreshold?if_exists},${assetTag.loAlarmThreshold?if_exists},${assetTag.loQualityThreshold?if_exists},${assetTag.lastCalibrated?if_exists},${assetTag.locationUUID?if_exists},${assetTag.alertStatusUri?if_exists},${assetTag.timeseriesDatasource.tag?if_exists}

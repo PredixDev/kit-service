@@ -1,4 +1,4 @@
 uri,userGroup,location,updateDate,expirationDate,deviceType,deviceName,deviceGroup,deviceAddress,createdDate,activationDate
 <#list devices as device>
-${device.uri},${device.userGroup},${device.geoLocation.latitude},${device.geoLocation.longitude},${device.updateDate?eval?number_to_datetime},${device.expirationDate?eval?number_to_datetime},${device.deviceType},${device.deviceName},${device.deviceGroup},${device.deviceAddress},${device.createdDate?eval?number_to_datetime},${device.activationDate?eval?number_to_datetime}
+${device.uri},${device.userGroup},<#if device.geoLocation.latitude??>"${device.geoLocation.latitude},${device.geoLocation.longitude}"</#if>,${device.updateDate?eval?number_to_datetime},${device.expirationDate?eval?number_to_datetime},${device.deviceType},${device.deviceName},${device.deviceGroup},${device.deviceAddress},${device.createdDate?eval?number_to_datetime},${device.activationDate?eval?number_to_datetime}
 </#list>

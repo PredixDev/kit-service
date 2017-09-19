@@ -395,7 +395,7 @@ public class KitController
         	device.setDeviceConfig(this.getDeviceManager().getDeviceConfig());
         }        
         
-        if (contentType != null && MediaType.APPLICATION_OCTET_STREAM_VALUE.equals(contentType)) {
+        if (contentType != null && MediaType.APPLICATION_OCTET_STREAM_VALUE.equalsIgnoreCase(contentType)) {
         	List<RegisterDevice> devices = new ArrayList<RegisterDevice>();
         	devices.add(device);
         	String fileName = this.csvWriter.getAssetCSV(devices);
