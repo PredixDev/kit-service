@@ -451,13 +451,15 @@ public class KitController
             List<EventError> eventErrors = setObjectErrors(errors, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(eventErrors, HttpStatus.BAD_REQUEST);
         }
-        // continue with get
-        
-        RegisterDevice device = this.getDeviceManager().getDevice(deviceId, userId);
        
-        // check device activation
         try
         {
+         // continue with get device without user
+           RegisterDevice device = this.getDeviceManager().getDevice(deviceId,null);
+           if(device == null ){
+               List<EventError> eventErrors = setErrors(new DeviceRegistrationError("Error fetching device"), HttpStatus.BAD_REQUEST.value(),DEVICE_RESET_ERROR); //$NON-NLS-1$
+               return new ResponseEntity<>(eventErrors, HttpStatus.BAD_REQUEST);
+           }
            Boolean isAdmin =  (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
             this.getDeviceManager().resetDevice(device,isAdmin,userId);
         }
