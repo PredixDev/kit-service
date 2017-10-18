@@ -221,7 +221,7 @@ public class DeviceManager extends BaseManager
         log.debug(this.jsonMapper.toJson(result));
         if ( !CollectionUtils.isEmpty(result.getErrorEvent()) )
         {
-            log.error("Error: registering/Updating Device for With devicegroup"+deviceGroup.getUri() + "userGroup" + userGroupString +" for User with Id" + userId); //$NON-NLS-1$ //$NON-NLS-2$
+            log.error("Error: registering/Updating Device for With devicegroup"+deviceGroup.getUri() + "userGroup" + userGroupString +" for User with Id" + userId); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
            throw new DeviceRegistrationError(result.getErrorEvent().get(0));
         }
         return device;

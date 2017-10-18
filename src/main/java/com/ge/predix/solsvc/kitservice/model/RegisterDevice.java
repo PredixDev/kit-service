@@ -41,7 +41,11 @@ public class RegisterDevice
     /**
      * 
      */
-   
+    String deviceId;
+    
+    /**
+     * 
+     */
     String deviceName;
     /**
      * 
@@ -85,12 +89,32 @@ public class RegisterDevice
      * 
      */
     String ipAddress;
+
+    /**
+     * 
+     */
+    String industrialAssetRef;
     
     /**
      * 
      */
     private GeoLocation geoLocation = new GeoLocation();
     
+    /**
+     * @return reference to associated industrial asset
+     */
+    public String getIndustrialAssetRef()
+    {
+        return this.industrialAssetRef;
+    }
+    /**
+     * @param industrialAssetRef the industrialAssetRef to set
+     */
+    public void setIndustrialAssetRef(String industrialAssetRef)
+    {
+        this.industrialAssetRef = industrialAssetRef;
+    }
+
     /**
      * @return the ipAddress
      */
@@ -152,6 +176,9 @@ public class RegisterDevice
     public void setDeviceAddress(String deviceAddress)
     {
         this.deviceAddress = deviceAddress;
+        if (deviceAddress != null) {
+        	this.deviceId = deviceAddress.replaceAll("[^a-zA-Z0-9]", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		}
     }
     /**
      * @return the deviceType
@@ -297,6 +324,18 @@ public class RegisterDevice
     {
         this.geoLocation = geLocation;
     }
+	/**
+	 * @return the deviceId
+	 */
+	public String getDeviceId() {
+		return this.deviceId;
+	}
+	/**
+	 * @param deviceId the deviceId to set
+	 */
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
+	}
     
     
 }

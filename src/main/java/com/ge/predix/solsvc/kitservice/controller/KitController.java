@@ -104,8 +104,8 @@ public class KitController
 				resource = new InputStreamResource(new FileInputStream(file));
 				return ResponseEntity.ok()
 	                    .contentLength(file.length())
-	                    .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-	                    .header("content-disposition", "attachment;filename="+fileName) //$NON-NLS-1$ //$NON-NLS-2$
+	                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	                    .header("Content-Disposition", "attachment;filename="+fileName) //$NON-NLS-1$ //$NON-NLS-2$
 	                    .body(resource);
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -396,25 +396,21 @@ public class KitController
         }        
         
         if (contentType != null && MediaType.APPLICATION_OCTET_STREAM_VALUE.equalsIgnoreCase(contentType)) {
-        	List<RegisterDevice> devices = new ArrayList<RegisterDevice>();
-        	devices.add(device);
-        	String fileName = this.csvWriter.getAssetCSV(devices);
+        	String fileName = this.csvWriter.getAssetCSV(device);
         	File file = new File(fileName);
         	InputStreamResource resource;
 			try {
 				resource = new InputStreamResource(new FileInputStream(file));
 				return ResponseEntity.ok()
 	                    .contentLength(file.length())
-	                    .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-	                    .header("content-disposition", "attachment;filename="+fileName) //$NON-NLS-1$ //$NON-NLS-2$
+	                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	                    .header("Content-Disposition", "attachment;filename=\""+fileName+"\"") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	                    .body(resource);
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new RuntimeException("Exception when Processing zip file"); //$NON-NLS-1$
 			}finally {
 				file.delete();
 			}
-        	return null;
         }
 		return new ResponseEntity<RegisterDevice>(device, HttpStatus.OK);
     }
@@ -456,12 +452,11 @@ public class KitController
         {
          // continue with get device without user
            RegisterDevice device = this.getDeviceManager().getDevice(deviceId,null);
-           if(device == null ){
-               List<EventError> eventErrors = setErrors(new DeviceRegistrationError("Error fetching device"), HttpStatus.BAD_REQUEST.value(),DEVICE_RESET_ERROR); //$NON-NLS-1$
-               return new ResponseEntity<>(eventErrors, HttpStatus.BAD_REQUEST);
+           if(device != null ){
+               Boolean isAdmin =  (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
+               this.getDeviceManager().resetDevice(device,isAdmin,userId);
            }
-           Boolean isAdmin =  (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
-            this.getDeviceManager().resetDevice(device,isAdmin,userId);
+           
         }
         catch (DeviceRegistrationError e)
         {

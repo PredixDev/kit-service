@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,64 @@ public class CSVWriter {
 		
 	}
 	/**
+	 * @param device -
+	 * @return -
+	 * @throws IOException -
+	 */
+	public String getAssetCSV(RegisterDevice device) {
+		Map<String, Object> root = new HashMap<>();
+		List<RegisterDevice> devices = new ArrayList<RegisterDevice>();
+		devices.add(device);
+		root.put("devices", devices); //$NON-NLS-1$
+		
+		StringWriter deviceWriter = new StringWriter();
+		try {
+			Template temp = this.cfg.getTemplate("export_asset.csv"); //$NON-NLS-1$
+			temp.process(root, deviceWriter);
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
+		}
+		StringWriter tagWriter = new StringWriter();
+		try {
+			Template temp = this.cfg.getTemplate("export_assettag.csv"); //$NON-NLS-1$
+			temp.process(root, tagWriter);
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
+		}
+		
+		StringWriter locationWriter = new StringWriter();
+		try {
+			Template temp = this.cfg.getTemplate("export_asset_location.csv"); //$NON-NLS-1$
+			temp.process(root, locationWriter);
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException("Exception when exporting Asset Locations",e); //$NON-NLS-1$
+		}
+		
+		String zipFileName = device.getDeviceName()+"_Device.zip"; //$NON-NLS-1$
+		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));){
+		
+			zos.putNextEntry(new ZipEntry(device.getDeviceAddress()+"_Device.csv")); //$NON-NLS-1$
+			byte[] data = deviceWriter.toString().getBytes();
+			zos.write(data, 0, data.length);
+			zos.closeEntry();
+			
+			zos.putNextEntry(new ZipEntry(device.getDeviceAddress()+"_DeviceTag.csv")); //$NON-NLS-1$
+			data = tagWriter.toString().getBytes();
+			zos.write(data, 0, data.length);
+			zos.closeEntry();
+			
+			zos.putNextEntry(new ZipEntry(device.getDeviceAddress()+"_Airport.csv")); //$NON-NLS-1$
+			data = locationWriter.toString().getBytes();
+			zos.write(data, 0, data.length);
+			zos.closeEntry();
+			
+		} catch (IOException e) {
+			throw new RuntimeException("Exception when creating Zip file",e); //$NON-NLS-1$
+		}
+		return zipFileName;
+	}
+	
+	/**
 	 * @param devices -
 	 * @return -
 	 * @throws IOException -
@@ -104,22 +163,35 @@ public class CSVWriter {
 			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
 		}
 		
-		String zipFileName = "AssetModel.zip"; //$NON-NLS-1$
+		StringWriter locationWriter = new StringWriter();
+		try {
+			Template temp = this.cfg.getTemplate("export_asset_location.csv"); //$NON-NLS-1$
+			temp.process(root, locationWriter);
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException("Exception when exporting Asset Locations",e); //$NON-NLS-1$
+		}
+		
+		String zipFileName = "Devices.zip"; //$NON-NLS-1$
 		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));){
 		
-			zos.putNextEntry(new ZipEntry("Asset.csv")); //$NON-NLS-1$
+			zos.putNextEntry(new ZipEntry("Device.csv")); //$NON-NLS-1$
 			byte[] data = deviceWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
 			
-			zos.putNextEntry(new ZipEntry("AssetTag.csv")); //$NON-NLS-1$
+			zos.putNextEntry(new ZipEntry("DeviceTag.csv")); //$NON-NLS-1$
 			data = tagWriter.toString().getBytes();
+			zos.write(data, 0, data.length);
+			zos.closeEntry();
+			
+			zos.putNextEntry(new ZipEntry("Airport.csv")); //$NON-NLS-1$
+			data = locationWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
 			
 		} catch (IOException e) {
 			throw new RuntimeException("Exception when creating Zip file",e); //$NON-NLS-1$
 		}
-		return "AssetModel.zip"; //$NON-NLS-1$
+		return zipFileName;
 	}
 }
