@@ -7,7 +7,7 @@
  * with the terms and conditions stipulated in the agreement/contract
  * under which the software has been supplied.
  */
- 
+
 package com.ge.predix.solsvc.kitservice.model;
 
 import java.io.Serializable;
@@ -16,54 +16,50 @@ import java.io.Serializable;
  * 
  * @author 212421693 -
  */
-public class GeoLocation implements Serializable
-{
+public class GeoLocation implements Serializable {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -3350292912815020657L;
-    /**
-     * 
-     */
-    String latitude;
-    
-    /**
-     * 
-     */
-    String longitude;
-    
-    /**
-     * @return the latitude
-     */
-    public String getLatitude()
-    {
-        return this.latitude;
-    }
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3350292912815020657L;
+	/**
+	 * 
+	 */
+	String latitude;
 
-    /**
-     * @param latitude the latitude to set
-     */
-    public void setLatitude(String latitude)
-    {
-        this.latitude = latitude;
-    }
+	/**
+	 * 
+	 */
+	String longitude;
 
-    /**
-     * @return the longitude
-     */
-    public String getLongitude()
-    {
-        return this.longitude;
-    }
+	/**
+	 * @return the latitude
+	 */
+	public String getLatitude() {
+		return this.latitude;
+	}
 
-    /**
-     * @param longitude the longitude to set
-     */
-    public void setLongitude(String longitude)
-    {
-        this.longitude = longitude;
-    }
+	/**
+	 * @param latitude
+	 *            the latitude to set
+	 */
+	public void setLatitude(String latitude) {
+		this.latitude = latitude;
+	}
 
-  
+	/**
+	 * @return the longitude
+	 */
+	public String getLongitude() {
+		return this.longitude;
+	}
+
+	/**
+	 * @param longitude
+	 *            the longitude to set
+	 */
+	public void setLongitude(String longitude) {
+		this.longitude = longitude;
+	}
+
 }

@@ -31,166 +31,171 @@ import freemarker.template.TemplateExceptionHandler;
  */
 @Component
 public class CSVWriter {
-	 
-	
+
 	@Autowired
-    private
-    ResourceLoader resourceLoader;
-	
+	private ResourceLoader resourceLoader;
+
 	/**
-	 * Free marker Configuration 
+	 * Free marker Configuration
 	 */
 	Configuration cfg = null;
-	
-	
+
 	/**
-	 *  -
+	 * -
 	 */
 	@PostConstruct
 	public void activate() {
-		
-			// Create your Configuration instance, and specify if up to what FreeMarker
-			// version (here 2.3.25) do you want to apply the fixes that are not 100%
-			// backward-compatible. See the Configuration JavaDoc for details.
-			this.cfg = new Configuration(Configuration.VERSION_2_3_25);
 
-			// Specify the source where the template files come from. Here I set a
-			// plain directory for it, but non-file-system sources are possible too:
-			Resource resource = this.resourceLoader.getResource("classpath:export"); //$NON-NLS-1$
-			try {
-				File dbAsFile = resource.getFile();
-				
-				this.cfg.setDirectoryForTemplateLoading(dbAsFile);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		// Create your Configuration instance, and specify if up to what
+		// FreeMarker
+		// version (here 2.3.25) do you want to apply the fixes that are not
+		// 100%
+		// backward-compatible. See the Configuration JavaDoc for details.
+		this.cfg = new Configuration(Configuration.VERSION_2_3_25);
 
-			// Set the preferred charset template files are stored in. UTF-8 is
-			// a good choice in most applications:
-			this.cfg.setDefaultEncoding("UTF-8"); //$NON-NLS-1$
+		// Specify the source where the template files come from. Here I set a
+		// plain directory for it, but non-file-system sources are possible too:
+		Resource resource = this.resourceLoader.getResource("classpath:export"); //$NON-NLS-1$
+		try {
+			File dbAsFile = resource.getFile();
 
-			// Sets how errors will appear.
-			// During web page *development* TemplateExceptionHandler.HTML_DEBUG_HANDLER is better.
-			this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+			this.cfg.setDirectoryForTemplateLoading(dbAsFile);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
-			// Don't log exceptions inside FreeMarker that it will thrown at you anyway:
-			this.cfg.setLogTemplateExceptions(false);
-			
-			this.cfg.setDateTimeFormat("MM/dd/yyyy hh:mm:ss a"); //$NON-NLS-1$
-		
+		// Set the preferred charset template files are stored in. UTF-8 is
+		// a good choice in most applications:
+		this.cfg.setDefaultEncoding("UTF-8"); //$NON-NLS-1$
+
+		// Sets how errors will appear.
+		// During web page *development*
+		// TemplateExceptionHandler.HTML_DEBUG_HANDLER is better.
+		this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+
+		// Don't log exceptions inside FreeMarker that it will thrown at you
+		// anyway:
+		this.cfg.setLogTemplateExceptions(false);
+
+		this.cfg.setDateTimeFormat("MM/dd/yyyy hh:mm:ss a"); //$NON-NLS-1$
+
 	}
+
 	/**
-	 * @param device -
+	 * @param device
+	 *            -
 	 * @return -
-	 * @throws IOException -
+	 * @throws IOException
+	 *             -
 	 */
 	public String getAssetCSV(RegisterDevice device) {
 		Map<String, Object> root = new HashMap<>();
 		List<RegisterDevice> devices = new ArrayList<RegisterDevice>();
 		devices.add(device);
 		root.put("devices", devices); //$NON-NLS-1$
-		
+
 		StringWriter deviceWriter = new StringWriter();
 		try {
 			Template temp = this.cfg.getTemplate("export_asset.csv"); //$NON-NLS-1$
 			temp.process(root, deviceWriter);
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when exporting Asset", e); //$NON-NLS-1$
 		}
 		StringWriter tagWriter = new StringWriter();
 		try {
 			Template temp = this.cfg.getTemplate("export_assettag.csv"); //$NON-NLS-1$
 			temp.process(root, tagWriter);
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when exporting Asset", e); //$NON-NLS-1$
 		}
-		
+
 		StringWriter locationWriter = new StringWriter();
 		try {
 			Template temp = this.cfg.getTemplate("export_asset_location.csv"); //$NON-NLS-1$
 			temp.process(root, locationWriter);
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Exception when exporting Asset Locations",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when exporting Asset Locations", e); //$NON-NLS-1$
 		}
-		
-		String zipFileName = device.getDeviceName()+"_Device.zip"; //$NON-NLS-1$
-		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));){
-		
-			zos.putNextEntry(new ZipEntry(device.getDeviceAddress()+"_Device.csv")); //$NON-NLS-1$
+
+		String zipFileName = device.getDeviceName() + "_Device.zip"; //$NON-NLS-1$
+		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));) {
+
+			zos.putNextEntry(new ZipEntry(device.getDeviceAddress() + "_Device.csv")); //$NON-NLS-1$
 			byte[] data = deviceWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
-			
-			zos.putNextEntry(new ZipEntry(device.getDeviceAddress()+"_DeviceTag.csv")); //$NON-NLS-1$
+
+			zos.putNextEntry(new ZipEntry(device.getDeviceAddress() + "_DeviceTag.csv")); //$NON-NLS-1$
 			data = tagWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
-			
-			zos.putNextEntry(new ZipEntry(device.getDeviceAddress()+"_Airport.csv")); //$NON-NLS-1$
+
+			zos.putNextEntry(new ZipEntry(device.getDeviceAddress() + "_Airport.csv")); //$NON-NLS-1$
 			data = locationWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
-			
+
 		} catch (IOException e) {
-			throw new RuntimeException("Exception when creating Zip file",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when creating Zip file", e); //$NON-NLS-1$
 		}
 		return zipFileName;
 	}
-	
+
 	/**
-	 * @param devices -
+	 * @param devices
+	 *            -
 	 * @return -
-	 * @throws IOException -
+	 * @throws IOException
+	 *             -
 	 */
 	public String getAssetCSV(List<RegisterDevice> devices) {
 		Map<String, Object> root = new HashMap<>();
-		
+
 		root.put("devices", devices); //$NON-NLS-1$
-		
+
 		StringWriter deviceWriter = new StringWriter();
 		try {
 			Template temp = this.cfg.getTemplate("export_asset.csv"); //$NON-NLS-1$
 			temp.process(root, deviceWriter);
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when exporting Asset", e); //$NON-NLS-1$
 		}
 		StringWriter tagWriter = new StringWriter();
 		try {
 			Template temp = this.cfg.getTemplate("export_assettag.csv"); //$NON-NLS-1$
 			temp.process(root, tagWriter);
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Exception when exporting Asset",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when exporting Asset", e); //$NON-NLS-1$
 		}
-		
+
 		StringWriter locationWriter = new StringWriter();
 		try {
 			Template temp = this.cfg.getTemplate("export_asset_location.csv"); //$NON-NLS-1$
 			temp.process(root, locationWriter);
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Exception when exporting Asset Locations",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when exporting Asset Locations", e); //$NON-NLS-1$
 		}
-		
+
 		String zipFileName = "Devices.zip"; //$NON-NLS-1$
-		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));){
-		
+		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileName));) {
+
 			zos.putNextEntry(new ZipEntry("Device.csv")); //$NON-NLS-1$
 			byte[] data = deviceWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
-			
+
 			zos.putNextEntry(new ZipEntry("DeviceTag.csv")); //$NON-NLS-1$
 			data = tagWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
-			
+
 			zos.putNextEntry(new ZipEntry("Airport.csv")); //$NON-NLS-1$
 			data = locationWriter.toString().getBytes();
 			zos.write(data, 0, data.length);
 			zos.closeEntry();
-			
+
 		} catch (IOException e) {
-			throw new RuntimeException("Exception when creating Zip file",e); //$NON-NLS-1$
+			throw new RuntimeException("Exception when creating Zip file", e); //$NON-NLS-1$
 		}
 		return zipFileName;
 	}

@@ -7,7 +7,7 @@
  * with the terms and conditions stipulated in the agreement/contract
  * under which the software has been supplied.
  */
- 
+
 package com.ge.predix.solsvc.kitservice.manager;
 
 import java.util.List;
@@ -28,85 +28,71 @@ import com.ge.predix.solsvc.fdh.handler.GetDataHandler;
  * 
  * @author 212421693 -
  */
-public abstract class BaseManager
-{
-    private static final Logger log          = LoggerFactory.getLogger(BaseManager.class);
-    
-    /**
-     * 
-     */
-    @Autowired
-    protected JsonMapper          jsonMapper;
-    
-    @Autowired
-    private GetDataHandler      assetGetFieldDataHandler;
-    
-    
-    
-    /**
-     * @param request -
-     * @param headers -
-     * @return -
-     */
-    protected List<FieldData> getFieldDataResult(GetFieldDataRequest request, List<Header> headers)
-    {
-        GetFieldDataResult getResult = this.assetGetFieldDataHandler.getData(request, null, headers);
-        log.debug(this.jsonMapper.toJson(getResult));
-        if ( !CollectionUtils.isEmpty(getResult.getErrorEvent()) )
-        {
-            log.info("Error: fetching data"+this.jsonMapper.toJson(getResult)); //$NON-NLS-1$
-            return null;
-            // TBD do something
-        }
-        if ( CollectionUtils.isEmpty(getResult.getFieldData()) || ( CollectionUtils.isNotEmpty(getResult.getFieldData()) &&  getResult.getFieldData().get(0).getData() == null) )
-        {
-            log.info("Data Not found for "+this.jsonMapper.toJson(getResult)); //$NON-NLS-1$
-            return null;
-            
-        }
-        return getResult.getFieldData();
-        
-    }
+public abstract class BaseManager {
+	private static final Logger log = LoggerFactory.getLogger(BaseManager.class);
 
+	/**
+	 * 
+	 */
+	@Autowired
+	protected JsonMapper jsonMapper;
 
+	@Autowired
+	private GetDataHandler assetGetFieldDataHandler;
 
-    /**
-     * @return the jsonMapper
-     */
-    public JsonMapper getJsonMapper()
-    {
-        return this.jsonMapper;
-    }
+	/**
+	 * @param request
+	 *            -
+	 * @param headers
+	 *            -
+	 * @return -
+	 */
+	protected List<FieldData> getFieldDataResult(GetFieldDataRequest request, List<Header> headers) {
+		GetFieldDataResult getResult = this.assetGetFieldDataHandler.getData(request, null, headers);
+		log.debug(this.jsonMapper.toJson(getResult));
+		if (!CollectionUtils.isEmpty(getResult.getErrorEvent())) {
+			log.info("Error: fetching data" + this.jsonMapper.toJson(getResult)); //$NON-NLS-1$
+			return null;
+			// TBD do something
+		}
+		if (CollectionUtils.isEmpty(getResult.getFieldData()) || (CollectionUtils.isNotEmpty(getResult.getFieldData())
+				&& getResult.getFieldData().get(0).getData() == null)) {
+			log.info("Data Not found for " + this.jsonMapper.toJson(getResult)); //$NON-NLS-1$
+			return null;
 
+		}
+		return getResult.getFieldData();
 
+	}
 
-    /**
-     * @param jsonMapper the jsonMapper to set
-     */
-    public void setJsonMapper(JsonMapper jsonMapper)
-    {
-        this.jsonMapper = jsonMapper;
-    }
+	/**
+	 * @return the jsonMapper
+	 */
+	public JsonMapper getJsonMapper() {
+		return this.jsonMapper;
+	}
 
+	/**
+	 * @param jsonMapper
+	 *            the jsonMapper to set
+	 */
+	public void setJsonMapper(JsonMapper jsonMapper) {
+		this.jsonMapper = jsonMapper;
+	}
 
+	/**
+	 * @return the assetGetFieldDataHandler
+	 */
+	public GetDataHandler getAssetGetFieldDataHandler() {
+		return this.assetGetFieldDataHandler;
+	}
 
-    /**
-     * @return the assetGetFieldDataHandler
-     */
-    public GetDataHandler getAssetGetFieldDataHandler()
-    {
-        return this.assetGetFieldDataHandler;
-    }
-
-
-
-    /**
-     * @param assetGetFieldDataHandler the assetGetFieldDataHandler to set
-     */
-    public void setAssetGetFieldDataHandler(GetDataHandler assetGetFieldDataHandler)
-    {
-        this.assetGetFieldDataHandler = assetGetFieldDataHandler;
-    }
-    
+	/**
+	 * @param assetGetFieldDataHandler
+	 *            the assetGetFieldDataHandler to set
+	 */
+	public void setAssetGetFieldDataHandler(GetDataHandler assetGetFieldDataHandler) {
+		this.assetGetFieldDataHandler = assetGetFieldDataHandler;
+	}
 
 }

@@ -29,39 +29,37 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * @author 212421693 -
  */
 @RestController
-public class ErrorResponseController
-        implements ErrorController
-{
-    private static final String PATH = "/error"; //$NON-NLS-1$
+public class ErrorResponseController implements ErrorController {
+	private static final String PATH = "/error"; //$NON-NLS-1$
 
-    @Value("${debug:false}")
-    private boolean             debug;
+	@Value("${debug:false}")
+	private boolean debug;
 
-    @Autowired
-    private ErrorAttributes     errorAttributes;
+	@Autowired
+	private ErrorAttributes errorAttributes;
 
-    /**
-     * @param request -
-     * @param response -
-     * @return -
-     */
-    @RequestMapping(value = PATH)
-    EventError error(HttpServletRequest request, HttpServletResponse response)
-    {
-        // Appropriate HTTP response code (e.g. 404 or 500) is automatically set by Spring.
-        // Here we just define response body.
-        return new EventError(response.getStatus(), getErrorAttributes(request, this.debug));
-    }
+	/**
+	 * @param request
+	 *            -
+	 * @param response
+	 *            -
+	 * @return -
+	 */
+	@RequestMapping(value = PATH)
+	EventError error(HttpServletRequest request, HttpServletResponse response) {
+		// Appropriate HTTP response code (e.g. 404 or 500) is automatically set
+		// by Spring.
+		// Here we just define response body.
+		return new EventError(response.getStatus(), getErrorAttributes(request, this.debug));
+	}
 
-    @Override
-    public String getErrorPath()
-    {
-        return PATH;
-    }
+	@Override
+	public String getErrorPath() {
+		return PATH;
+	}
 
-    private Map<String, Object> getErrorAttributes(HttpServletRequest request, boolean includeStackTrace)
-    {
-        RequestAttributes requestAttributes = new ServletRequestAttributes(request);
-        return this.errorAttributes.getErrorAttributes(requestAttributes, includeStackTrace);
-    }
+	private Map<String, Object> getErrorAttributes(HttpServletRequest request, boolean includeStackTrace) {
+		RequestAttributes requestAttributes = new ServletRequestAttributes(request);
+		return this.errorAttributes.getErrorAttributes(requestAttributes, includeStackTrace);
+	}
 }

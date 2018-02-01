@@ -7,7 +7,7 @@
  * with the terms and conditions stipulated in the agreement/contract
  * under which the software has been supplied.
  */
- 
+
 package com.ge.predix.solsvc.service;
 
 import org.junit.runner.RunWith;
@@ -25,9 +25,8 @@ import com.ge.predix.solsvc.kitservice.boot.Application;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration
-@IntegrationTest({"server.port=9092"})
-public abstract class AbstractBaseControllerIT 
-{
+@IntegrationTest({ "server.port=9092" })
+public abstract class AbstractBaseControllerIT {
 	/*
 	 * 
 	 */

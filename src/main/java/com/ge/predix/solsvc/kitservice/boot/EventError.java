@@ -14,120 +14,109 @@ import java.util.Map;
 
 import org.springframework.util.StringUtils;
 
-
-
 /**
  * 
  * @author 212421693 -
  */
-public class EventError
-{
-    /**
-     * status
-     */
-    Integer status;
-    /**
-     * error
-     */
-    String  error;
-    
-    /**
-     * message
-     */
-    String  message;
-    /**
-     * timeStamp
-     */
-    String  timeStamp;
-    
-    /**
-     * code 
-     */
-    String code;
+public class EventError {
+	/**
+	 * status
+	 */
+	Integer status;
+	/**
+	 * error
+	 */
+	String error;
 
-    /**
-     * @param status
-     *            -
-     * @param errorAttributes
-     *            -
-     */
-    public EventError(int status, Map<String, Object> errorAttributes)
-    {
-        this.status = status;
-        this.error = (String) errorAttributes.get("error"); //$NON-NLS-1$
-        this.message = (String) errorAttributes.get("message"); //$NON-NLS-1$
-        this.code = (String) errorAttributes.get("code"); //$NON-NLS-1$
-        if(! StringUtils.isEmpty(errorAttributes.get("timestamp"))) {//$NON-NLS-1$
-            this.timeStamp = errorAttributes.get("timestamp").toString(); //$NON-NLS-1$
-        }
+	/**
+	 * message
+	 */
+	String message;
+	/**
+	 * timeStamp
+	 */
+	String timeStamp;
 
-    }
+	/**
+	 * code
+	 */
+	String code;
 
-    /**
-     * @return the status
-     */
-    public Integer getStatus()
-    {
-        return this.status;
-    }
+	/**
+	 * @param status
+	 *            -
+	 * @param errorAttributes
+	 *            -
+	 */
+	public EventError(int status, Map<String, Object> errorAttributes) {
+		this.status = status;
+		this.error = (String) errorAttributes.get("error"); //$NON-NLS-1$
+		this.message = (String) errorAttributes.get("message"); //$NON-NLS-1$
+		this.code = (String) errorAttributes.get("code"); //$NON-NLS-1$
+		if (!StringUtils.isEmpty(errorAttributes.get("timestamp"))) {//$NON-NLS-1$
+			this.timeStamp = errorAttributes.get("timestamp").toString(); //$NON-NLS-1$
+		}
 
-    /**
-     * @param status the status to set
-     */
-    public void setStatus(Integer status)
-    {
-        this.status = status;
-    }
+	}
 
-    /**
-     * @return the error
-     */
-    public String getError()
-    {
-        return this.error;
-    }
+	/**
+	 * @return the status
+	 */
+	public Integer getStatus() {
+		return this.status;
+	}
 
-    /**
-     * @param error the error to set
-     */
-    public void setError(String error)
-    {
-        this.error = error;
-    }
+	/**
+	 * @param status
+	 *            the status to set
+	 */
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
 
-    /**
-     * @return the message
-     */
-    public String getMessage()
-    {
-        return this.message;
-    }
+	/**
+	 * @return the error
+	 */
+	public String getError() {
+		return this.error;
+	}
 
-    /**
-     * @param message the message to set
-     */
-    public void setMessage(String message)
-    {
-        this.message = message;
-    }
+	/**
+	 * @param error
+	 *            the error to set
+	 */
+	public void setError(String error) {
+		this.error = error;
+	}
 
-    /**
-     * @return the timeStamp
-     */
-    public String getTimeStamp()
-    {
-        return this.timeStamp;
-    }
+	/**
+	 * @return the message
+	 */
+	public String getMessage() {
+		return this.message;
+	}
 
-    /**
-     * @param timeStamp the timeStamp to set
-     */
-    public void setTimeStamp(String timeStamp)
-    {
-        this.timeStamp = timeStamp;
-    }
-    
-    
-    
-    
+	/**
+	 * @param message
+	 *            the message to set
+	 */
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	/**
+	 * @return the timeStamp
+	 */
+	public String getTimeStamp() {
+		return this.timeStamp;
+	}
+
+	/**
+	 * @param timeStamp
+	 *            the timeStamp to set
+	 */
+	public void setTimeStamp(String timeStamp) {
+		this.timeStamp = timeStamp;
+	}
+
 }

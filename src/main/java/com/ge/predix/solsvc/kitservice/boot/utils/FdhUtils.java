@@ -7,7 +7,7 @@
  * with the terms and conditions stipulated in the agreement/contract
  * under which the software has been supplied.
  */
- 
+
 package com.ge.predix.solsvc.kitservice.boot.utils;
 
 import java.io.UnsupportedEncodingException;
@@ -30,216 +30,226 @@ import com.ge.predix.entity.putfielddata.PutFieldDataRequest;
  * 
  * @author 212421693 -
  */
-public class FdhUtils
-{
-    
-    private static final int DEFAULT_ASSET_PAGESIZE = 1000;
-    
-    
-  /**
-   * 
-   * @param device -
-   * @param group - 
-   * @param userGroup -
-   * @return -
-   */
-    public static PutFieldDataRequest createRegisterPutRequest(String device, String group, String userGroup)
-    {
-        
+public class FdhUtils {
 
-        // Request
-        PutFieldDataRequest putFieldDataRequest = new PutFieldDataRequest();
-        putFieldDataRequest.setCorrelationId("string"); //$NON-NLS-1$
-        putFieldDataRequest.getPutFieldDataCriteria().add( getFieldCriteria(device));
-        if(StringUtils.isNotEmpty(group))
-            putFieldDataRequest.getPutFieldDataCriteria().add( getFieldCriteria(group));
-        if(StringUtils.isNotEmpty(userGroup))
-            putFieldDataRequest.getPutFieldDataCriteria().add( getFieldCriteria(userGroup));
-     
-        return putFieldDataRequest;
-    }
+	private static final int DEFAULT_ASSET_PAGESIZE = 1000;
 
+	/**
+	 * 
+	 * @param device
+	 *            -
+	 * @param group
+	 *            -
+	 * @param userGroup
+	 *            -
+	 * @return -
+	 */
+	public static PutFieldDataRequest createRegisterPutRequest(String device, String group, String userGroup) {
 
-    /**
-     * @param device
-     * @return -
-     */
-    private static PutFieldDataCriteria getFieldCriteria(String dataString)
-    {
-        FieldData fieldData = new FieldData();
-        Field field = new Field();
-        FieldIdentifier fieldIdentifier = new FieldIdentifier();
-        field.setFieldIdentifier(fieldIdentifier);
-        fieldData.getField().add(field);
-        
-        //device
-        PredixString data = new PredixString();
-        data.setString(dataString);
-        fieldData.setData(data);
+		// Request
+		PutFieldDataRequest putFieldDataRequest = new PutFieldDataRequest();
+		putFieldDataRequest.setCorrelationId("string"); //$NON-NLS-1$
+		putFieldDataRequest.getPutFieldDataCriteria().add(getFieldCriteria(device));
+		if (StringUtils.isNotEmpty(group))
+			putFieldDataRequest.getPutFieldDataCriteria().add(getFieldCriteria(group));
+		if (StringUtils.isNotEmpty(userGroup))
+			putFieldDataRequest.getPutFieldDataCriteria().add(getFieldCriteria(userGroup));
 
-        // Criteria 
-        PutFieldDataCriteria fieldDataCriteria = new PutFieldDataCriteria();
-        fieldDataCriteria.setFieldData(fieldData);
-        return fieldDataCriteria;
-    }
+		return putFieldDataRequest;
+	}
 
+	/**
+	 * @param device
+	 * @return -
+	 */
+	private static PutFieldDataCriteria getFieldCriteria(String dataString) {
+		FieldData fieldData = new FieldData();
+		Field field = new Field();
+		FieldIdentifier fieldIdentifier = new FieldIdentifier();
+		field.setFieldIdentifier(fieldIdentifier);
+		fieldData.getField().add(field);
 
-    /**
-     * @param filterFieldValue -
-     * @param expectedDataType -
-     * @param deviceIdentifier -
-     * @param string - 
-     * @param userId -
-     * @param deviceAddress -
-     * @return -
-     * @throws UnsupportedEncodingException -
-     */
-    public static GetFieldDataRequest createGetUserDeviceRequest(String filterFieldValue, String expectedDataType, String userId,
-            String deviceAddress) throws UnsupportedEncodingException
-    {
-        GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
+		// device
+		PredixString data = new PredixString();
+		data.setString(dataString);
+		fieldData.setData(data);
 
-        FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
+		// Criteria
+		PutFieldDataCriteria fieldDataCriteria = new PutFieldDataCriteria();
+		fieldDataCriteria.setFieldData(fieldData);
+		return fieldDataCriteria;
+	}
 
-        // SELECT
-        FieldSelection fieldSelection = new FieldSelection();
-        FieldIdentifier fieldIdentifier = new FieldIdentifier();
-        fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by the system
-        fieldSelection.setFieldIdentifier(fieldIdentifier);
-        fieldSelection.setExpectedDataType(expectedDataType);
+	/**
+	 * @param filterFieldValue
+	 *            -
+	 * @param expectedDataType
+	 *            -
+	 * @param deviceIdentifier
+	 *            -
+	 * @param string
+	 *            -
+	 * @param userId
+	 *            -
+	 * @param deviceAddress
+	 *            -
+	 * @return -
+	 * @throws UnsupportedEncodingException
+	 *             -
+	 */
+	public static GetFieldDataRequest createGetUserDeviceRequest(String filterFieldValue, String expectedDataType,
+			String userId, String deviceAddress) throws UnsupportedEncodingException {
+		GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
 
-        // FILTER
-        AssetFilter assetFilter = new AssetFilter();
-        assetFilter.setUri(filterFieldValue);
-       
-        if(StringUtils.isEmpty(userId) && !StringUtils.isEmpty(deviceAddress)) {
-            assetFilter.setFilterString("deviceAddress="+deviceAddress); //$NON-NLS-1$ 
-        }
-        else if(StringUtils.isEmpty(deviceAddress)) {
-            String encodedUrl = URLEncoder.encode("uaaUsers="+userId+"<userGroup","UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            assetFilter.setFilterString(encodedUrl+"&pageSize="+DEFAULT_ASSET_PAGESIZE);  //$NON-NLS-1$
-        } else {
-           String encodedUrl = URLEncoder.encode("uaaUsers="+userId+"<userGroup:deviceAddress="+deviceAddress,"UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            assetFilter.setFilterString(encodedUrl+"&pageSize="+DEFAULT_ASSET_PAGESIZE);  //$NON-NLS-1$
-        }
+		FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
 
-        // SELECT
-        fieldDataCriteria.getFieldSelection().add(fieldSelection);
-        // WHERE
-        fieldDataCriteria.setFilter(assetFilter);
+		// SELECT
+		FieldSelection fieldSelection = new FieldSelection();
+		FieldIdentifier fieldIdentifier = new FieldIdentifier();
+		fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by
+												// the system
+		fieldSelection.setFieldIdentifier(fieldIdentifier);
+		fieldSelection.setExpectedDataType(expectedDataType);
 
-        getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
-        return getFieldDataRequest;
-    }
-    
-   /**
-    * 
-    * @param groupRef - 
-    * @param expectedDataType -
-    * @param userId -
-    * @return -
-    */
-    public static GetFieldDataRequest createGetGroupRequest(String groupRef, String expectedDataType)
-    {
-        GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
+		// FILTER
+		AssetFilter assetFilter = new AssetFilter();
+		assetFilter.setUri(filterFieldValue);
 
-        FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
+		if (StringUtils.isEmpty(userId) && !StringUtils.isEmpty(deviceAddress)) {
+			assetFilter.setFilterString("deviceAddress=" + deviceAddress); //$NON-NLS-1$
+		} else if (StringUtils.isEmpty(deviceAddress)) {
+			String encodedUrl = URLEncoder.encode("uaaUsers=" + userId + "<userGroup", "UTF-8");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			assetFilter.setFilterString(encodedUrl + "&pageSize=" + DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
+		} else {
+			String encodedUrl = URLEncoder.encode("uaaUsers=" + userId + "<userGroup:deviceAddress=" + deviceAddress, //$NON-NLS-1$ //$NON-NLS-2$
+					"UTF-8");//$NON-NLS-1$
+			assetFilter.setFilterString(encodedUrl + "&pageSize=" + DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
+		}
 
-        // SELECT
-        FieldSelection fieldSelection = new FieldSelection();
-        FieldIdentifier fieldIdentifier = new FieldIdentifier();
-        fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by the system
-        fieldSelection.setFieldIdentifier(fieldIdentifier);
-        fieldSelection.setExpectedDataType(expectedDataType);
+		// SELECT
+		fieldDataCriteria.getFieldSelection().add(fieldSelection);
+		// WHERE
+		fieldDataCriteria.setFilter(assetFilter);
 
-        // FILTER
-        AssetFilter assetFilter = new AssetFilter();
-        assetFilter.setUri(groupRef+"?pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
-        
-        // SELECT
-        fieldDataCriteria.getFieldSelection().add(fieldSelection);
-        // WHERE
-        fieldDataCriteria.setFilter(assetFilter);
+		getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
+		return getFieldDataRequest;
+	}
 
-        getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
-        return getFieldDataRequest;
-    }
+	/**
+	 * 
+	 * @param groupRef
+	 *            -
+	 * @param expectedDataType
+	 *            -
+	 * @param userId
+	 *            -
+	 * @return -
+	 */
+	public static GetFieldDataRequest createGetGroupRequest(String groupRef, String expectedDataType) {
+		GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
 
+		FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
 
-/**
- * @param userGroupRef -
- * @param deviceGroupRef -
- * @param expectedDataType -
- * @param userId -
- * @return -
- */
-public static GetFieldDataRequest createGetUserGroupRequest(String userGroupRef, String expectedDataType, String userId)
-{
-    GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
+		// SELECT
+		FieldSelection fieldSelection = new FieldSelection();
+		FieldIdentifier fieldIdentifier = new FieldIdentifier();
+		fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by
+												// the system
+		fieldSelection.setFieldIdentifier(fieldIdentifier);
+		fieldSelection.setExpectedDataType(expectedDataType);
 
-    FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
+		// FILTER
+		AssetFilter assetFilter = new AssetFilter();
+		assetFilter.setUri(groupRef + "?pageSize=" + DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
 
-    // SELECT
-    FieldSelection fieldSelection = new FieldSelection();
-    FieldIdentifier fieldIdentifier = new FieldIdentifier();
-    fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by the system
-    fieldSelection.setFieldIdentifier(fieldIdentifier);
-    fieldSelection.setExpectedDataType(expectedDataType);
+		// SELECT
+		fieldDataCriteria.getFieldSelection().add(fieldSelection);
+		// WHERE
+		fieldDataCriteria.setFilter(assetFilter);
 
-    // FILTER
-    AssetFilter assetFilter = new AssetFilter();
-    
-    if(StringUtils.isNotEmpty(userId)) {
-        assetFilter.setFilterString("uaaUsers="+userId+"&pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$ //$NON-NLS-2$
-        assetFilter.setUri(userGroupRef);
-    }else {
-        assetFilter.setUri(userGroupRef+"?pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
-    }
-   
-    
-   
-  
-    // SELECT
-    fieldDataCriteria.getFieldSelection().add(fieldSelection);
-    // WHERE
-    fieldDataCriteria.setFilter(assetFilter);
+		getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
+		return getFieldDataRequest;
+	}
 
-    getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
-    return getFieldDataRequest;
-}
+	/**
+	 * @param userGroupRef
+	 *            -
+	 * @param deviceGroupRef
+	 *            -
+	 * @param expectedDataType
+	 *            -
+	 * @param userId
+	 *            -
+	 * @return -
+	 */
+	public static GetFieldDataRequest createGetUserGroupRequest(String userGroupRef, String expectedDataType,
+			String userId) {
+		GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
 
-/**
- * 
- * @param filterFieldValue -
- * @param expectedDataType -
- * @return GetFieldDataRequest
- * @throws UnsupportedEncodingException -
- */
-public static GetFieldDataRequest createGetAdminDeviceRequest(String filterFieldValue, String expectedDataType) throws UnsupportedEncodingException
-{
-    GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
+		FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
 
-    FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
+		// SELECT
+		FieldSelection fieldSelection = new FieldSelection();
+		FieldIdentifier fieldIdentifier = new FieldIdentifier();
+		fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by
+												// the system
+		fieldSelection.setFieldIdentifier(fieldIdentifier);
+		fieldSelection.setExpectedDataType(expectedDataType);
 
-    // SELECT
-    FieldSelection fieldSelection = new FieldSelection();
-    FieldIdentifier fieldIdentifier = new FieldIdentifier();
-    fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by the system
-    fieldSelection.setFieldIdentifier(fieldIdentifier);
-    fieldSelection.setExpectedDataType(expectedDataType);
+		// FILTER
+		AssetFilter assetFilter = new AssetFilter();
 
-    // FILTER
-    AssetFilter assetFilter = new AssetFilter();
-    assetFilter.setUri(filterFieldValue+"?pageSize="+DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
-   
-   
-    // SELECT
-    fieldDataCriteria.getFieldSelection().add(fieldSelection);
-    // WHERE
-    fieldDataCriteria.setFilter(assetFilter);
+		if (StringUtils.isNotEmpty(userId)) {
+			assetFilter.setFilterString("uaaUsers=" + userId + "&pageSize=" + DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$ //$NON-NLS-2$
+			assetFilter.setUri(userGroupRef);
+		} else {
+			assetFilter.setUri(userGroupRef + "?pageSize=" + DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
+		}
 
-    getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
-    return getFieldDataRequest;
-}
+		// SELECT
+		fieldDataCriteria.getFieldSelection().add(fieldSelection);
+		// WHERE
+		fieldDataCriteria.setFilter(assetFilter);
+
+		getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
+		return getFieldDataRequest;
+	}
+
+	/**
+	 * 
+	 * @param filterFieldValue
+	 *            -
+	 * @param expectedDataType
+	 *            -
+	 * @return GetFieldDataRequest
+	 * @throws UnsupportedEncodingException
+	 *             -
+	 */
+	public static GetFieldDataRequest createGetAdminDeviceRequest(String filterFieldValue, String expectedDataType)
+			throws UnsupportedEncodingException {
+		GetFieldDataRequest getFieldDataRequest = new GetFieldDataRequest();
+
+		FieldDataCriteria fieldDataCriteria = new FieldDataCriteria();
+
+		// SELECT
+		FieldSelection fieldSelection = new FieldSelection();
+		FieldIdentifier fieldIdentifier = new FieldIdentifier();
+		fieldIdentifier.setId("/PredixString"); //$NON-NLS-1$ default needed by
+												// the system
+		fieldSelection.setFieldIdentifier(fieldIdentifier);
+		fieldSelection.setExpectedDataType(expectedDataType);
+
+		// FILTER
+		AssetFilter assetFilter = new AssetFilter();
+		assetFilter.setUri(filterFieldValue + "?pageSize=" + DEFAULT_ASSET_PAGESIZE); //$NON-NLS-1$
+
+		// SELECT
+		fieldDataCriteria.getFieldSelection().add(fieldSelection);
+		// WHERE
+		fieldDataCriteria.setFilter(assetFilter);
+
+		getFieldDataRequest.getFieldDataCriteria().add(fieldDataCriteria);
+		return getFieldDataRequest;
+	}
 
 }

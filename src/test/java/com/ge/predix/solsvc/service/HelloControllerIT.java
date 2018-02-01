@@ -7,12 +7,13 @@
  * with the terms and conditions stipulated in the agreement/contract
  * under which the software has been supplied.
  */
- 
+
 package com.ge.predix.solsvc.service;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.junit.Before;
@@ -26,44 +27,45 @@ import org.springframework.web.client.RestTemplate;
  * 
  * @author 212421693 -
  */
-public class HelloControllerIT extends AbstractBaseControllerIT
-{
-    @Value("${local.server.port}")
-    private int localServerPort;
+public class HelloControllerIT extends AbstractBaseControllerIT {
+	@Value("${local.server.port}")
+	private int localServerPort;
 
-    private URL base;
-    private RestTemplate template;
+	private URL base;
+	private RestTemplate template;
 
-    /**
-     * @throws Exception -
-     */
-    @Before
-    public void setUp() throws Exception {
-        this.template = new TestRestTemplate();
-    }
+	/**
+	 *             -
+	 */
+	@Before
+	public void setUp() {
+		this.template = new TestRestTemplate();
+	}
 
-    /**
-     * @throws Exception -
-     */
-    @SuppressWarnings("nls")
-    @Test
-    public void getHealth() throws Exception {
-        this.base = new URL("http://localhost:" + this.localServerPort + "/health");
-        ResponseEntity<String> response = this.template.getForEntity(this.base.toString(), String.class);
-        assertThat(response.getBody(), startsWith("{\"status\":\"up\""));
-        
-    }
-    
-    /**
-     * @throws Exception -
-     */
-    @SuppressWarnings("nls")
-    @Test
-    public void getEcho() throws Exception {
-        this.base = new URL("http://localhost:" + this.localServerPort + "/echo");
-        ResponseEntity<String> response = this.template.getForEntity(this.base.toString(), String.class);
-        assertThat(response.getBody(), startsWith("Greetings from Predix Spring Boot! echo="));
-        
-    }
+	/**
+	 *             -
+	 * @throws MalformedURLException -
+	 */
+	@SuppressWarnings("nls")
+	@Test
+	public void getHealth() throws MalformedURLException {
+		this.base = new URL("http://localhost:" + this.localServerPort + "/health");
+		ResponseEntity<String> response = this.template.getForEntity(this.base.toString(), String.class);
+		assertThat(response.getBody(), startsWith("{\"status\":\"up\""));
+
+	}
+
+	/**
+	 * @throws MalformedURLException -
+	 *             -
+	 */
+	@SuppressWarnings("nls")
+	@Test
+	public void getEcho() throws MalformedURLException {
+		this.base = new URL("http://localhost:" + this.localServerPort + "/echo");
+		ResponseEntity<String> response = this.template.getForEntity(this.base.toString(), String.class);
+		assertThat(response.getBody(), startsWith("Greetings from Predix Spring Boot! echo="));
+
+	}
 
 }
