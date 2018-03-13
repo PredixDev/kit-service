@@ -1,4 +1,0 @@
-deviceId,uri,userGroup,location,updateDate,expirationDate,deviceType,deviceName,deviceGroup,deviceAddress,createdDate,activationDate,airportId,currentDecibels,currentAbatementAlarm,amountSaved,industrialAsset
-<#list devices as device>
-${device.deviceId},${device.uri},${device.userGroup?if_exists},<#if device.geoLocation.latitude??>"${device.geoLocation.latitude},${device.geoLocation.longitude}"</#if>,${device.updateDate?eval?number_to_datetime},${device.expirationDate?eval?number_to_datetime},${device.deviceType},${device.deviceName},${device.deviceGroup?if_exists},${device.deviceAddress},${device.createdDate?eval?number_to_datetime},${device.activationDate?eval?number_to_datetime},SFO,75,FALSE,60,${device.industrialAsset?if_exists}
-</#list>

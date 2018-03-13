@@ -1,0 +1,7 @@
+com.ge.predix.solsvc.kitservice.boot
+com.ge.predix.solsvc.kitservice.boot.utils
+com.ge.predix.solsvc.kitservice.controller
+com.ge.predix.solsvc.kitservice.error
+com.ge.predix.solsvc.kitservice.manager
+com.ge.predix.solsvc.kitservice.model
+com.ge.predix.solsvc.kitservice.validator
