@@ -85,10 +85,7 @@ public class FdhUtils {
 	 *            -
 	 * @param expectedDataType
 	 *            -
-	 * @param deviceIdentifier
-	 *            -
-	 * @param string
-	 *            -
+	 * 
 	 * @param userId
 	 *            -
 	 * @param deviceAddress
@@ -136,13 +133,13 @@ public class FdhUtils {
 	}
 
 	/**
+	 * Method that creates a get request for getting device groups of a device
 	 * 
 	 * @param groupRef
 	 *            -
 	 * @param expectedDataType
 	 *            -
-	 * @param userId
-	 *            -
+	 * 
 	 * @return -
 	 */
 	public static GetFieldDataRequest createGetGroupRequest(String groupRef, String expectedDataType) {
@@ -172,9 +169,9 @@ public class FdhUtils {
 	}
 
 	/**
+	 * Method that creates a get request for getting userGroups
+	 * 
 	 * @param userGroupRef
-	 *            -
-	 * @param deviceGroupRef
 	 *            -
 	 * @param expectedDataType
 	 *            -

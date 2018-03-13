@@ -82,11 +82,11 @@ public class CSVWriter {
 	}
 
 	/**
-	 * @param device
-	 *            -
+	 * gets the asset file name
+	 * @param device : is a registered Device
+	 * 
 	 * @return -
-	 * @throws IOException
-	 *             -
+	 * 
 	 */
 	public String getAssetCSV(RegisterDevice device) {
 		Map<String, Object> root = new HashMap<>();
@@ -142,11 +142,10 @@ public class CSVWriter {
 	}
 
 	/**
-	 * @param devices
-	 *            -
+	 * @param devices : list of registered devices
+	 * 
 	 * @return -
-	 * @throws IOException
-	 *             -
+	 *
 	 */
 	public String getAssetCSV(List<RegisterDevice> devices) {
 		Map<String, Object> root = new HashMap<>();

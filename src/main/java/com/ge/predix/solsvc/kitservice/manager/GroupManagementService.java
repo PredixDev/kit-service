@@ -70,10 +70,8 @@ public class GroupManagementService extends BaseManager {
 	}
 
 	/**
-	 * @param headers
-	 *            -
-	 * @param deviceGroup
-	 *            -
+	 * creates a new userGroup with the userID passed
+	 * 
 	 * @param userId
 	 *            -
 	 * @return -
@@ -93,10 +91,6 @@ public class GroupManagementService extends BaseManager {
 	 * @param userGroupUri
 	 *            -
 	 * @param headers
-	 *            -
-	 * @param deviceGroup
-	 *            -
-	 * @param userId
 	 *            -
 	 * @return -
 	 */

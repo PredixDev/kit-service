@@ -3,6 +3,8 @@ package com.ge.predix.solsvc.kitservice.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -67,15 +72,13 @@ public class KitController {
 	}
 
 	/**
-	 * Sample End point which returns a Welcome Message
+	 * Method that returns the devices for an admin or for a user if userId is
+	 * passed
 	 * 
 	 * @param request
 	 *            -
 	 * @param authorization
 	 *            -
-	 * 
-	 * @param echo
-	 *            - the string to echo back
 	 * @return -
 	 */
 	@SuppressWarnings({ "resource" })
@@ -83,15 +86,16 @@ public class KitController {
 			MediaType.APPLICATION_XHTML_XML_VALUE })
 	public ResponseEntity<?> getDevices(HttpServletRequest request,
 			@RequestHeader("Authorization") String authorization) {
+		// log.info("calling /device method API call");
 		List<RegisterDevice> devices = null;
 		String userId = getUserId(request);
 		Boolean isAdmin = (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
 
 		if (isAdmin) {
 			devices = this.deviceManager.getAllAdminDevices();
-		} else {
+		} else
 			devices = this.deviceManager.getDevices(userId);
-		}
+
 		String contentType = request.getHeader("Content-Type"); //$NON-NLS-1$
 
 		if (contentType != null && MediaType.APPLICATION_OCTET_STREAM_VALUE.equals(contentType)) {
@@ -137,13 +141,15 @@ public class KitController {
 			return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
 		}
 		// continue to register device
-		// RegisterDevice originalDevice = this.deviceManager.getDevice("device", userId, device.getDeviceAddress());//$NON-NLS-1$
+		// RegisterDevice originalDevice =
+		// this.deviceManager.getDevice("device",
+		// userId, device.getDeviceAddress());//$NON-NLS-1$
 		// removing the user check adding check per deviceIdentifer
 		RegisterDevice originalDevice = this.deviceManager.getDevice("device", null, device.getDeviceAddress());//$NON-NLS-1$
 		try {
 			if (originalDevice == null) {
 				// device not found. register it.
-				log.info("Registrating device with address " + device.getDeviceAddress()); //$NON-NLS-1$
+				log.info("Registering device with address " + device.getDeviceAddress()); //$NON-NLS-1$
 				this.deviceManager.registerDevice(device, userId);
 			} else {
 				log.info("This is a registered device with address " + device.getDeviceAddress()); //$NON-NLS-1$
@@ -308,22 +314,14 @@ public class KitController {
 		return this.deviceManager.getUserId(accessToken);
 	}
 
-
-
 	/**
 	 * Details about each Device
 	 * 
 	 * @param deviceId
 	 *            -
-	 * @param model
-	 *            -
 	 * @param request
 	 *            -
 	 * @param authorization
-	 *            -
-	 * @param result
-	 *            -
-	 * @param echo
 	 *            -
 	 * @return -
 	 */
@@ -383,24 +381,20 @@ public class KitController {
 				file.delete();
 			}
 		}
-		return new ResponseEntity<RegisterDevice>(device, HttpStatus.OK);	}
-
-
+		return new ResponseEntity<RegisterDevice>(device, HttpStatus.OK);
+	}
 
 	/**
 	 * This method resets the Device settings.
 	 * 
 	 * @param deviceId
 	 *            -
-	 * @param device
-	 *            -
 	 * @param request
-	 *            -
-	 * @param result
 	 *            -
 	 * @param authorization
 	 *            -
 	 * @return -
+	 * 
 	 */
 	@RequestMapping(value = "/device/reset/{deviceId}", method = RequestMethod.PUT)
 	public ResponseEntity<?> resetRegisterDevice(@PathVariable String deviceId, HttpServletRequest request,
@@ -428,8 +422,17 @@ public class KitController {
 			// continue with get device without user
 			RegisterDevice device = this.deviceManager.getDevice(deviceId, null);
 			if (device != null) {
+
 				Boolean isAdmin = (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
-				this.deviceManager.resetDeviceActivation(device, isAdmin, userId);
+
+				try {
+					this.deviceManager.resetDeviceActivation(device, isAdmin, userId);
+				} catch (IOException e) {
+					log.error("KitController: Asset model could not be reset. ", e);
+					throw new RuntimeException("KitController: Exception when resetting the device", e);
+					// return new ResponseEntity<>(eventErrors, HttpStatus.);
+				}
+
 			}
 
 		} catch (DeviceRegistrationError e) {

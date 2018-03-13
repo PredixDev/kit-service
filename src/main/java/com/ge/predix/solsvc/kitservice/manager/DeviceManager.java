@@ -15,12 +15,15 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.message.BasicHeader;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -42,6 +46,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import com.ge.predix.solsvc.bootstrap.ams.common.AssetConfig;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ge.predix.entity.asset.AssetTag;
@@ -78,6 +83,8 @@ public class DeviceManager extends BaseManager {
 
 	@Autowired
 	private PutDataHandler assetPutFieldDataHandler;
+	@Autowired
+	protected AssetConfig assetConfig;
 
 	@Autowired
 	private RestClient restClient;
@@ -139,9 +146,11 @@ public class DeviceManager extends BaseManager {
 	/**
 	 * @param device
 	 *            -
-	 * @param userId -
+	 * @param userId
+	 *            -
 	 * @return RegisterDevice
-	 * @throws DeviceRegistrationError -
+	 * @throws DeviceRegistrationError
+	 *             -
 	 */
 	public RegisterDevice createorUpdateDevice(RegisterDevice device, String userId) throws DeviceRegistrationError {
 
@@ -206,15 +215,27 @@ public class DeviceManager extends BaseManager {
 			deviceGroup = this.groupManagementService.getDeviceGroup(headers, device.getDeviceGroup());
 		}
 		if (deviceGroup == null) {
-			// this means that device group not ** found adding the user to this
-			// user group
 			deviceGroup = this.groupManagementService.createDeviceGroup(device.getDeviceGroup(), userGroup.getUri());
+		} else {
+			/**
+			 * @212672942: check for userGroup inside the deviceGroup because if
+			 * the device is reset then deviceGroup might not have a userGroup
+			 * attached.
+			 */
+			/**
+			 * this also takes care of registering with same device group name
+			 * from various devices. If the deviceGroup exists the userID will
+			 * get added to it.
+			 */
+
+			log.info("Adding the userID to the deviceGroup's userGroup " + userGroup.getUri());
+			deviceGroup.getUserGroup().add(userGroup.getUri());
 		}
 
 		String userGroupString = this.groupManagementService.getUserGroupString(userGroup);
 		String group = this.groupManagementService.getDeviceGroupString(deviceGroup);
-		log.debug("With devicegroup" + deviceGroup.getUri() + "userGroup" + userGroupString); //$NON-NLS-1$ //$NON-NLS-2$
-
+		// log.info("With devicegroup" + deviceGroup.getUri() + "userGroup" +
+		// userGroupString); //$NON-NLS-1$ //$NON-NLS-2$
 		List<Object> kitModels = new ArrayList<>();
 		kitModels.add(device);
 		String deviceString = this.jsonMapper.toJson(kitModels);
@@ -255,9 +276,10 @@ public class DeviceManager extends BaseManager {
 
 		return device;
 	}
-	
+
 	/**
-	 * @param accessToken -
+	 * @param accessToken
+	 *            -
 	 * @return -
 	 */
 	public String getUserId(Jwt accessToken) {
@@ -314,19 +336,13 @@ public class DeviceManager extends BaseManager {
 	 * @return -
 	 */
 	public List<RegisterDevice> getDevices(String userId) {
-		log.info("Calling get All Device for"); //$NON-NLS-1$
+		log.info("Calling get All Device for:" + userId); //$NON-NLS-1$
 
 		return getDevice(userId);
 	}
 
 	/**
-	 * @param deviceIdentifier
-	 *            -
 	 * @param userId
-	 *            -
-	 * @param deviceAddress
-	 *            -
-	 * @param deviceName
 	 *            -
 	 * @return -
 	 */
@@ -359,9 +375,7 @@ public class DeviceManager extends BaseManager {
 	 *            -
 	 * @param deviceAddress
 	 *            -
-	 * @param deviceName
-	 *            -
-	 * @return -
+	 * @return - returns the device
 	 */
 	public RegisterDevice getDevice(String deviceIdentifier, String userId, String deviceAddress) {
 
@@ -456,10 +470,12 @@ public class DeviceManager extends BaseManager {
 				&& !originalDevice.getDeviceName().equalsIgnoreCase(device.getDeviceName())) {
 			originalDevice.setDeviceName(device.getDeviceName());
 		}
-		if (StringUtils.isNotEmpty(device.getDeviceGroup())
-				&& !originalDevice.getDeviceGroup().equalsIgnoreCase(device.getDeviceGroup())) {
+
+		if (StringUtils.isNotEmpty(device.getDeviceGroup())) {
+
 			originalDevice.setDeviceGroup(device.getDeviceGroup());
 		}
+
 		if (CollectionUtils.isNotEmpty(device.getTags())) {
 			originalDevice.getTags().addAll(device.getTags());
 		}
@@ -505,15 +521,139 @@ public class DeviceManager extends BaseManager {
 	 *            -
 	 * @throws DeviceRegistrationError
 	 *             -
+	 * @throws IOException
+	 *             if deleting the device's userGroup from the API end point URL
+	 *             during reset of the device causes issues
+	 * 
+	 * 
 	 */
-	public void resetDeviceActivation(RegisterDevice device, Boolean isAdmin, String userid) throws DeviceRegistrationError {
-		if (isAdmin) {
-			log.info("DeviceManager: admin access... resetting device" + device.getUri()); //$NON-NLS-1$
+	public void resetDeviceActivation(RegisterDevice device, Boolean isAdmin, String userid)
+			throws DeviceRegistrationError, IOException {
+
+		/**
+		 * @author 212672942 Resetting the device - On the device, blank out
+		 *         both deviceGroup and the userGroup. Also remove the userID
+		 *         from the userGroup. If this is the last userID in that
+		 *         userGroup,remove the userGroup from the deviceGroup as well
+		 *         as remove the userGroup itself from the backend.
+		 *
+		 */
+
+		log.info("DeviceManager: ... resetting device" + device.getUri()); //$NON-NLS-1$
+		List<Header> headers = getServiceHeaders();
+		if (StringUtils.isEmpty(device.getUserGroup())) {
+			// Device has no userGroup which means it was reset.
 			device.setUpdateDate(String.valueOf(Instant.now().toEpochMilli()));
 			device.setActivationDate(device.getUpdateDate());
-			createorUpdateDevice(device, userid);
+			device.setDeviceGroup(null);
+			device.setUserGroup(null);
+			this.updateDeviceDuringReset(device, null, null, headers);
+		} else {
+			resetDeviceGroupAndUserGroup(device, userid, headers);
 		}
+	}
 
+	private void updateDeviceDuringReset(RegisterDevice device, DeviceGroup deviceGroup, UserGroup userGroup,
+			List<Header> headers) throws DeviceRegistrationError {
+		List<Object> kitModels = new ArrayList<>();
+		String userGroupString = null;
+		String deviceGroupString = null;
+		kitModels.add(device);
+		String deviceString = this.jsonMapper.toJson(kitModels);
+
+		if (deviceGroup != null)
+			deviceGroupString = this.groupManagementService.getDeviceGroupString(deviceGroup);
+
+		if (userGroup != null)
+			userGroupString = this.groupManagementService.getUserGroupString(userGroup);
+
+		PutFieldDataRequest putFieldDataRequest = FdhUtils.createRegisterPutRequest(deviceString, deviceGroupString,
+				userGroupString);
+		PutFieldDataResult result = this.assetPutFieldDataHandler.putData(putFieldDataRequest, null, headers,
+				HttpPost.METHOD_NAME);
+		log.debug(this.jsonMapper.toJson(result));
+		if (!CollectionUtils.isEmpty(result.getErrorEvent())) {
+			log.error(
+					"Error: Updating the device while resetting the device with address: " + device.getDeviceAddress()); //$NON-NLS-1$
+			throw new DeviceRegistrationError(result.getErrorEvent().get(0));
+		}
+	}
+
+	private void resetDeviceGroupAndUserGroup(RegisterDevice device, String userId, List<Header> headers)
+			throws DeviceRegistrationError, IOException {
+		UserGroup userGrp = null;
+		DeviceGroup deviceGrp = null;
+		String userGrpUri = null;
+		Set<String> uaaUsers = null;
+		Set<String> uaaOwners = null;
+		Set<String> deviceUserGroups = null;
+		String assetUri = null;
+
+		userGrpUri = device.getUserGroup();
+		userGrp = this.groupManagementService.getUserGroup(userGrpUri, headers);
+		uaaUsers = userGrp.getUaaUsers();
+		uaaOwners = userGrp.getUaaOwners();
+		/**
+		 * Remove the userID both from deviceGroup's userGroup and the userGroup
+		 * only if this is the last user on the device resetting. Else remove
+		 * userID only from userGroup.
+		 */
+		if (uaaUsers.size() == 1) {
+			// log.info("Only one user in the user group " + userGrpUri);
+
+			deviceGrp = this.groupManagementService.getDeviceGroup(headers, device.getDeviceGroup());
+			deviceUserGroups = deviceGrp.getUserGroup();
+			deviceUserGroups.remove(userGrpUri);
+
+			if (deviceUserGroups.isEmpty()) {
+
+				deviceGrp.setUserGroup(null);
+			} else
+				deviceGrp.setUserGroup(deviceUserGroups);
+		}
+		uaaUsers.remove(userId);
+		uaaOwners.remove(userId);
+
+		if (uaaUsers.isEmpty()) {
+			// delete the asset userGroup if the last user in this group resets
+			// the device
+			// this.assetPutFieldDataHandler.deleteData(userGrp.getUri(),
+			// headers);
+
+			assetUri = this.assetConfig.getAssetUri();
+
+			if (!assetUri.endsWith("/") && !userGrp.getUri().startsWith("/"))
+				assetUri += "/" + userGrp.getUri();
+			else
+				assetUri += userGrp.getUri();
+			// log.info("Asset URI is: " + assetUri);
+			CloseableHttpResponse response = null;
+			try {
+				this.restClient.delete(assetUri, headers, this.restConfig.getDefaultConnectionTimeout(),
+						this.restConfig.getDefaultSocketTimeout());
+			} finally {
+				if (response != null)
+					response.close();
+			}
+
+			// reset the device
+			device.setUpdateDate(String.valueOf(Instant.now().toEpochMilli()));
+			device.setActivationDate(device.getUpdateDate());
+			device.setDeviceGroup(null);
+			device.setUserGroup(null);
+			this.updateDeviceDuringReset(device, deviceGrp, null, headers);
+
+		} else {
+
+			userGrp.setUaaUsers(uaaUsers);
+			userGrp.setUaaOwners(uaaOwners);
+			userGrp.setUpdatedDate(String.valueOf(Instant.now().toEpochMilli()));
+			device.setUpdateDate(String.valueOf(Instant.now().toEpochMilli()));
+			device.setActivationDate(device.getUpdateDate());
+			device.setDeviceGroup(null);
+			device.setUserGroup(null);
+			this.updateDeviceDuringReset(device, deviceGrp, userGrp, headers);
+		}
 	}
 
 	/**
@@ -526,6 +666,7 @@ public class DeviceManager extends BaseManager {
 		List<RegisterDevice> devices = new ArrayList<RegisterDevice>();
 		List<Header> headers = getServiceHeaders();
 		GetFieldDataRequest request;
+
 		try {
 			request = FdhUtils.createGetAdminDeviceRequest("/" + DEVICE, "PredixString"); //$NON-NLS-1$//$NON-NLS-2$
 			List<FieldData> fieldDatas = getFieldDataResult(request, headers);
@@ -543,4 +684,5 @@ public class DeviceManager extends BaseManager {
 		return devices;
 
 	}
+
 }

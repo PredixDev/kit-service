@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -132,6 +133,40 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 		log.debug("Register Device Json req is " + this.jsonMapper.toJson(device));
 		List<Header> headers = new ArrayList<Header>();
 		String userToken = getUserToken(this.appUser, this.appUserPassword);
+		headers.add(new BasicHeader("Authorization", userToken));
+		headers.add(new BasicHeader("Content-Type", "application/json")); //$NON-NLS-2$
+
+		CloseableHttpResponse response = null;
+		try {
+			response = this.restClient.post(url, req, headers, this.restConfig.getDefaultConnectionTimeout(),
+					this.restConfig.getDefaultSocketTimeout());
+			Assert.assertNotNull(response);
+			String body = EntityUtils.toString(response.getEntity());
+			Assert.assertTrue(response.toString() + body, response.toString().contains("HTTP/1.1 200 OK"));
+			assertThat(body, containsString("uri"));
+			RegisterDevice registeredDevice = this.objectMapper.readValue(body, RegisterDevice.class);
+			assertTrue(registeredDevice.getUri() != null);
+			String kitDeviceUrl = (String) registeredDevice.getDeviceConfig().get("artifactoryConfigUrl");
+			assertTrue(kitDeviceUrl != null && kitDeviceUrl.startsWith("https"));
+
+		} finally {
+			if (response != null)
+				response.close();
+		}
+	}
+
+	@SuppressWarnings("nls")
+	// @Test
+	public void registerDevice2() throws ParseException, IOException {
+
+		String url = "http://localhost:" + this.localServerPort + "/device/register"; //$NON-NLS-2$
+		RegisterDevice device = getRegisterDevice2();
+
+		String req = this.jsonMapper.toJson(device);
+		log.debug("Register Device Json req is " + this.jsonMapper.toJson(device));
+		List<Header> headers = new ArrayList<Header>();
+		String userToken = getUserToken("app_admin_1", "app_admin_1"); //$NON-NLS-2$
+		// String userToken = getUserToken(this.appUser, this.appUserPassword);
 		headers.add(new BasicHeader("Authorization", userToken));
 		headers.add(new BasicHeader("Content-Type", "application/json")); //$NON-NLS-2$
 
@@ -303,8 +338,7 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 			response = this.restClient.get(url, headers);
 			Assert.assertNotNull(response);
 			String body = EntityUtils.toString(response.getEntity());
-			Assert.assertTrue(response.toString() + body,
-					response.toString().contains("HTTP/1.1 200 OK"));
+			Assert.assertTrue(response.toString() + body, response.toString().contains("HTTP/1.1 200 OK"));
 			List<RegisterDevice> registeredDevices = this.objectMapper.readValue(body, ArrayList.class);
 			assertTrue(registeredDevices != null);
 			assertTrue(registeredDevices.size() > 0);
@@ -318,7 +352,8 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	/**
 	 * @throws IOException
 	 *             -
-	 * @throws DeviceRegistrationError -
+	 * @throws DeviceRegistrationError
+	 *             -
 	 */
 	@SuppressWarnings("nls")
 	@Test
@@ -329,15 +364,23 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 		headers.add(new BasicHeader("Content-Type", "application/json"));
 
 		RegisterDevice device = getRegisterDevice();
-
+		// we don't get a userGroup when we get back the device.
+		String url = "http://localhost:" + this.localServerPort + "/device/" + device.getDeviceAddress(); //$NON-NLS-2$
 		// ensure the device hasn't expired
 		DateTime twoDaysAgo = new DateTime().minusDays(2);
-		device.setActivationDate(String.valueOf(twoDaysAgo.getMillis()));		
+		device.setActivationDate(String.valueOf(twoDaysAgo.getMillis()));
 		Jwt accessToken = JwtHelper.decode(userToken.substring(7));
 		String userId = this.deviceManager.getUserId(accessToken);
-		this.deviceManager.createorUpdateDevice(device, userId );
 
-		String url = "http://localhost:" + this.localServerPort + "/device/" + device.getDeviceAddress(); //$NON-NLS-2$
+		// RegisterDevice originalDevice =
+		// this.deviceManager.getDevice(device.getDeviceAddress(), userId);
+		// if(null !=(originalDevice.getUserGroup()))// it might be null because of
+		// reset.
+		// device.setUserGroup(originalDevice.getUserGroup());
+		// //it is better to set the userGroup here so that we don't keep creating new
+		// userGrp in this test when we call createorUpdateDevice
+
+		this.deviceManager.createorUpdateDevice(device, userId);
 		RegisterDevice updateDevice = getRegisterDevicebyId(headers, url);
 		updateDevice.setDeviceName("UpdateDevice-Test");
 
@@ -353,13 +396,14 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 					response.toString().contains("HTTP/1.1 200 OK"));
 
 			RegisterDevice newUpdatedDevice = getRegisterDevicebyId(headers, url);
+			// log.info("new updated device name is:" + newUpdatedDevice.getDeviceName() );
+			// log.info("updateDevice name is:" + updateDevice.getDeviceName());
 			Assert.assertTrue(newUpdatedDevice.getDeviceName().equalsIgnoreCase(updateDevice.getDeviceName()));
 		} finally {
 			if (response != null)
 				response.close();
 		}
 	}
-	
 
 	/**
 	 * @param url
@@ -411,6 +455,22 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 		device.setDeviceGroup("/deviceGroup/testcompany-2");
 		// device.setUserId("bd9f70a3-8aaa-490b-b2a8-91ba59e58f0f");
 		//
+		device.setUri("/device/" + device.getDeviceAddress());
+		GeoLocation geoLocation = new GeoLocation();
+		geoLocation.setLatitude("51.5033640");
+		geoLocation.setLongitude("-0.1276250");
+		device.setGeoLocation(geoLocation);
+		return device;
+	}
+
+	@SuppressWarnings("nls")
+	private RegisterDevice getRegisterDevice2() {
+		RegisterDevice device = new RegisterDevice();
+		device.setActivationDate(String.valueOf(Instant.now().toEpochMilli()));
+		device.setDeviceName("NUC-WR-IDP-2222");
+		device.setDeviceAddress("WR-IDP-2222");
+		device.setDeviceType("NUCSushma");
+		device.setDeviceGroup("/deviceGroup/testcompany-2");
 		device.setUri("/device/" + device.getDeviceAddress());
 		GeoLocation geoLocation = new GeoLocation();
 		geoLocation.setLatitude("51.5033640");
@@ -533,23 +593,32 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	 * @throws IOException
 	 *             -
 	 */
-	// @Test
+	@Test
 	@SuppressWarnings("nls")
-	public void resetDevice() throws IOException {
+	public void resetDevice() throws IOException, DeviceRegistrationError {
 		List<Header> headers = new ArrayList<Header>();
 		String userToken = getUserToken(this.appUser, this.appUserPassword);
 		headers.add(new BasicHeader("Authorization", userToken));
 		headers.add(new BasicHeader("Content-Type", "application/json")); //$NON-NLS-2$
 
 		RegisterDevice device = getRegisterDevice();
+		String deviceId = device.getDeviceAddress();
 		String url = "http://localhost:" + this.localServerPort + "/device/reset/" + device.getDeviceAddress(); //$NON-NLS-2$
-
+		/**
+		 * the method callPut will reset the device by making deviceGroup and userGroup
+		 * as null
+		 */
 		callPut(headers, url, "");
-
-		String getUrl = "http://localhost:" + this.localServerPort + "/device/" + device.getDeviceAddress(); //$NON-NLS-2$
-		RegisterDevice newUpdatedDevice = getRegisterDevicebyId(headers, getUrl);
-		Assert.assertTrue(org.apache.commons.lang.StringUtils.equalsIgnoreCase(newUpdatedDevice.getActivationDate(),
-				newUpdatedDevice.getUpdateDate()));
+		RegisterDevice myResetDevice = this.deviceManager.getDevice(deviceId, null);
+		if (myResetDevice != null) {
+			/**
+			 * Check/Assert if the reset worked. The activationDate and updateDate should be
+			 * the same
+			 */
+			// log.debug("getting back the reset device now..");
+			Assert.assertTrue(org.apache.commons.lang.StringUtils.equalsIgnoreCase(myResetDevice.getActivationDate(),
+					myResetDevice.getUpdateDate()));
+		}
 	}
 
 	/**
@@ -582,12 +651,12 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	 *             -
 	 */
 	@SuppressWarnings({ "unchecked", "nls" })
-	// @Test
+	@Test
 	public void getAdminDevice() throws ParseException, IOException {
 
 		String url = "http://localhost:" + this.localServerPort + "/device/"; //$NON-NLS-2$
 		List<Header> headers = new ArrayList<Header>();
-		String userToken = getUserToken("app_admin_1", "app_admin_1"); //$NON-NLS-2$
+		String userToken = getUserToken("kit_admin_1", "Kit_Admin_111"); //$NON-NLS-2$
 		headers.add(new BasicHeader("Authorization", userToken));
 		headers.add(new BasicHeader("Content-Type", "application/json")); //$NON-NLS-2$
 
@@ -598,6 +667,8 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 			String body = EntityUtils.toString(response.getEntity());
 			Assert.assertTrue(response.toString() + body, response.toString().contains("HTTP/1.1 200 OK"));
 			List<RegisterDevice> registeredDevices = this.objectMapper.readValue(body, ArrayList.class);
+			log.info("number of devices returned: " + registeredDevices.size());
+			log.info("devices returned: " + registeredDevices.toString());
 			assertTrue(registeredDevices != null);
 			assertTrue(registeredDevices.size() > 0);
 
