@@ -408,16 +408,17 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	/**
 	 * @param url
 	 * @param device
-	 * @param lastWeek
+	 * @param username
+	 * @param password
 	 * @throws IOException
 	 *             -
 	 */
 	@SuppressWarnings("nls")
-	private void callPost(String url, RegisterDevice device) throws IOException {
+	private void callPost(String url, RegisterDevice device ,String userName, String password) throws IOException {
 		String req = this.jsonMapper.toJson(device);
 		log.debug("Device Json req is " + this.jsonMapper.toJson(device));
 		List<Header> headers = new ArrayList<Header>();
-		String userToken = getUserToken(this.appUser, this.appUserPassword);
+		String userToken = getUserToken(userName, password);
 
 		headers.add(new BasicHeader("Authorization", userToken));
 		headers.add(new BasicHeader("Content-Type", "application/json")); //$NON-NLS-2$
@@ -437,6 +438,16 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 			if (response != null)
 				response.close();
 		}
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * @param device
+	 * @throws IOException -
+	 */
+	private void callPost(String url, RegisterDevice device) throws IOException {
+	     callPost(url, device,this.appUser, this.appUserPassword);
 	}
 
 	/**
@@ -525,7 +536,7 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	 */
 	@SuppressWarnings({ "nls" })
 	@Test
-	public void checkDeviceActivationExpiry() throws ParseException, IOException {
+	public void registerDevicewithExpiryForNonAdmin() throws ParseException, IOException {
 
 		String url = "http://localhost:" + this.localServerPort + "/device/register"; //$NON-NLS-2$
 		RegisterDevice device = getRegisterDevice();
@@ -556,6 +567,52 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 		}
 
 	}
+	
+	
+	/**
+	 * 
+	 * @throws ParseException
+	 * @throws IOException -
+	 */
+	@SuppressWarnings({ "nls" })
+    @Test
+    public void registerDevicewithExpiryForAdmin() throws ParseException, IOException {
+
+        String url = "http://localhost:" + this.localServerPort + "/device/register"; //$NON-NLS-2$
+        RegisterDevice device = getRegisterDevice();
+        device.setUri("/device/testexpiry");
+        device.setDeviceGroup("/deviceGroup/testexpiry");
+        device.setDeviceName("TEST-EXPIRY");
+        device.setDeviceAddress("testexpiry");
+        DateTime twoMonthsAgo = new DateTime().minusDays(60 + 1);
+        device.setActivationDate(String.valueOf(twoMonthsAgo.getMillis()));
+        log.debug("Register Device Json req is " + this.jsonMapper.toJson(device));
+        List<Header> headers = new ArrayList<Header>();
+        String adminToken = getUserToken("app_admin_1", "app_admin_1"); //$NON-NLS-2$
+
+        headers.add(new BasicHeader("Authorization", adminToken));
+        headers.add(new BasicHeader("Content-Type", "application/json")); //$NON-NLS-2$
+        callPost(url, device,"app_admin_1","app_admin_1");
+
+        CloseableHttpResponse response = null;
+        try {
+            String geturl = "http://localhost:" + this.localServerPort + "/device/" + device.getDeviceAddress(); //$NON-NLS-2$
+            response = this.restClient.get(geturl, headers);
+            Assert.assertNotNull(response);
+            String body = EntityUtils.toString(response.getEntity());
+            Assert.assertTrue(response.toString() + body, response.toString().contains("HTTP/1.1 200 OK"));
+            assertThat(body, containsString("uri"));
+            RegisterDevice registeredDevice = this.objectMapper.readValue(body, RegisterDevice.class);
+            assertTrue(registeredDevice.getUri() != null);
+            String kitDeviceUrl = (String) registeredDevice.getDeviceConfig().get("artifactoryConfigUrl");
+            assertTrue(kitDeviceUrl != null && kitDeviceUrl.startsWith("https"));
+
+        } finally {
+            if (response != null)
+                response.close();
+        }
+
+    }
 
 	/**
 	 * @throws IOException

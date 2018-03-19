@@ -132,7 +132,7 @@ public class KitController {
 			BindingResult result, @RequestHeader("Authorization") String authorization) {
 		String userId = getUserId(request);
 		log.info("Calling registerKit for user " + userId); //$NON-NLS-1$
-
+		Boolean isAdmin = (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
 		// validation
 		RegisterDeviceValidation validation = new RegisterDeviceValidation();
 		validation.validate(device, result);
@@ -154,12 +154,15 @@ public class KitController {
 			} else {
 				log.info("This is a registered device with address " + device.getDeviceAddress()); //$NON-NLS-1$
 				// this try-catch to check expire
-				try {
-					// check device expire
-					this.deviceManager.checkDeviceExpiry(originalDevice);
-				} catch (DeviceRegistrationError e) {
-					List<EventError> errors = setErrors(e, HttpStatus.BAD_REQUEST.value(), DEVICE_EXPIRY_ERROR);
-					return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+				// if admin Bypass this check 
+				if(! isAdmin) {
+    				try {
+    					// check device expire
+    					this.deviceManager.checkDeviceExpiry(originalDevice);
+    				} catch (DeviceRegistrationError e) {
+    					List<EventError> errors = setErrors(e, HttpStatus.BAD_REQUEST.value(), DEVICE_EXPIRY_ERROR);
+    					return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    				}
 				}
 				this.deviceManager.updateDevice(device, originalDevice, userId);
 
@@ -329,6 +332,7 @@ public class KitController {
 	public ResponseEntity<?> getDevice(@PathVariable String deviceId, HttpServletRequest request,
 			@RequestHeader("Authorization") String authorization) {
 		String userId = getUserId(request);
+		Boolean isAdmin = (Boolean) request.getAttribute("isAdmin"); //$NON-NLS-1$
 
 		List<ObjectError> errors = new ArrayList<ObjectError>();
 		if (!RegisterDeviceValidation.validate(deviceId,
@@ -354,11 +358,14 @@ public class KitController {
 			return new ResponseEntity<>(device, HttpStatus.NOT_FOUND);
 		}
 		// check device activation
-		try {
-			this.deviceManager.checkDeviceExpiry(device);
-		} catch (DeviceRegistrationError e) {
-			List<EventError> eventErrors = setErrors(e, HttpStatus.BAD_REQUEST.value(), DEVICE_EXPIRY_ERROR);
-			return new ResponseEntity<>(eventErrors, HttpStatus.BAD_REQUEST);
+		// fix: bypass expiry check if the token is admin
+		if( ! isAdmin) {
+    		try {
+    			this.deviceManager.checkDeviceExpiry(device);
+    		} catch (DeviceRegistrationError e) {
+    			List<EventError> eventErrors = setErrors(e, HttpStatus.BAD_REQUEST.value(), DEVICE_EXPIRY_ERROR);
+    			return new ResponseEntity<>(eventErrors, HttpStatus.BAD_REQUEST);
+    		}
 		}
 		String contentType = request.getHeader("Content-Type"); //$NON-NLS-1$
 		if (contentType == null || (!MediaType.APPLICATION_OCTET_STREAM_VALUE.equals(contentType)
