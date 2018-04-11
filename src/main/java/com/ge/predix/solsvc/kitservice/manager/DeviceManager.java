@@ -121,7 +121,7 @@ public class DeviceManager extends BaseManager {
 	 * @return -
 	 */
 	public RegisterDevice getDevice(String deviceIdentifier, String userId) {
-		log.info("Calling getDevice"); //$NON-NLS-1$
+		log.trace("Calling getDevice"); //$NON-NLS-1$
 		return getDevice("/" + DEVICE, userId, deviceIdentifier); //$NON-NLS-1$
 
 	}
@@ -347,7 +347,7 @@ public class DeviceManager extends BaseManager {
 	 * @return -
 	 */
 	public List<RegisterDevice> getDevice(String userId) {
-		log.info("Calling getDevice"); //$NON-NLS-1$
+		log.trace("Calling getDevice"); //$NON-NLS-1$
 		List<RegisterDevice> devices = new ArrayList<RegisterDevice>();
 		List<Header> headers = getServiceHeaders();
 		GetFieldDataRequest request;
@@ -379,7 +379,7 @@ public class DeviceManager extends BaseManager {
 	 */
 	public RegisterDevice getDevice(String deviceIdentifier, String userId, String deviceAddress) {
 
-		log.info("Calling getDevice by user and device address"); //$NON-NLS-1$
+		log.trace("Calling getDevice by user and device address"); //$NON-NLS-1$
 		RegisterDevice device = null;
 		List<Header> headers = getServiceHeaders();
 		GetFieldDataRequest request;
