@@ -57,8 +57,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 		PersistenceExceptionTranslationAutoConfiguration.class })
 @ComponentScan(basePackages = { "com.ge.predix.solsvc.kitservice" })
 @ImportResource({ "classpath*:META-INF/application-security.xml",
-		"classpath*:META-INF/spring/predix-rest-client-scan-context.xml",
-		"classpath*:META-INF/spring/ext-util-scan-context.xml",
 		"classpath*:META-INF/spring/fdh-asset-handler-scan-context.xml",
 		"classpath*:META-INF/spring/timeseries-bootstrap-scan-context.xml" })
 @Controller

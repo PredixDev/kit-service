@@ -15,11 +15,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +30,8 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicHeader;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -46,7 +44,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.jwt.Jwt;
 import org.springframework.stereotype.Component;
-import com.ge.predix.solsvc.bootstrap.ams.common.AssetConfig;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ge.predix.entity.asset.AssetTag;
@@ -56,6 +53,7 @@ import com.ge.predix.entity.fielddata.PredixString;
 import com.ge.predix.entity.getfielddata.GetFieldDataRequest;
 import com.ge.predix.entity.putfielddata.PutFieldDataRequest;
 import com.ge.predix.entity.putfielddata.PutFieldDataResult;
+import com.ge.predix.solsvc.bootstrap.ams.common.AssetConfig;
 import com.ge.predix.solsvc.fdh.handler.PutDataHandler;
 import com.ge.predix.solsvc.kitservice.boot.utils.FdhUtils;
 import com.ge.predix.solsvc.kitservice.error.DeviceRegistrationError;
@@ -83,8 +81,9 @@ public class DeviceManager extends BaseManager {
 
 	@Autowired
 	private PutDataHandler assetPutFieldDataHandler;
+	
 	@Autowired
-	protected AssetConfig assetConfig;
+	protected AssetConfig assetConfig; //TODO delete 
 
 	@Autowired
 	private RestClient restClient;
@@ -152,7 +151,8 @@ public class DeviceManager extends BaseManager {
 	 * @throws DeviceRegistrationError
 	 *             -
 	 */
-	public RegisterDevice createorUpdateDevice(RegisterDevice device, String userId) throws DeviceRegistrationError {
+	@SuppressWarnings("nls")
+    public RegisterDevice createorUpdateDevice(RegisterDevice device, String userId) throws DeviceRegistrationError {
 
 		List<Header> headers = getServiceHeaders();
 		// log.debug("In here to get Service Headers
@@ -629,6 +629,7 @@ public class DeviceManager extends BaseManager {
 			// log.info("Asset URI is: " + assetUri);
 			CloseableHttpResponse response = null;
 			try {
+			    //TODO should use the assetClient not the restClient
 				this.restClient.delete(assetUri, headers, this.restConfig.getDefaultConnectionTimeout(),
 						this.restConfig.getDefaultSocketTimeout());
 			} finally {

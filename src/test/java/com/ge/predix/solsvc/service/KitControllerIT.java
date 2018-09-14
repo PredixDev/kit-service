@@ -21,7 +21,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -155,6 +154,10 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 		}
 	}
 
+	/**
+	 * @throws ParseException -
+	 * @throws IOException -
+	 */
 	@SuppressWarnings("nls")
 	// @Test
 	public void registerDevice2() throws ParseException, IOException {
@@ -571,7 +574,7 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	
 	/**
 	 * 
-	 * @throws ParseException
+	 * @throws ParseException -
 	 * @throws IOException -
 	 */
 	@SuppressWarnings({ "nls" })
@@ -652,7 +655,7 @@ public class KitControllerIT extends AbstractBaseControllerIT {
 	 */
 	@Test
 	@SuppressWarnings("nls")
-	public void resetDevice() throws IOException, DeviceRegistrationError {
+	public void resetDevice() throws IOException {
 		List<Header> headers = new ArrayList<Header>();
 		String userToken = getUserToken(this.appUser, this.appUserPassword);
 		headers.add(new BasicHeader("Authorization", userToken));
