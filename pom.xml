@@ -5,7 +5,7 @@
 
 	<groupId>com.ge.predix.solsvc</groupId>
 	<artifactId>kit-service</artifactId>
-	<version>1.0.42</version>
+	<version>1.0.43</version>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -16,9 +16,9 @@
 
 	<properties>
 	
-		<asset-bootstrap-client.version>2.0.70</asset-bootstrap-client.version>
-		<fdh-asset-handler.version>2.0.79</fdh-asset-handler.version>
-		<timeseries-bootstrap.version>2.1.87</timeseries-bootstrap.version>
+		<asset-bootstrap-client.version>2.0.71</asset-bootstrap-client.version>
+		<fdh-asset-handler.version>2.0.80</fdh-asset-handler.version>
+		<timeseries-bootstrap.version>2.1.88</timeseries-bootstrap.version>
 		<uaa-lib.version>3.2.2</uaa-lib.version>
 
 		<jetty.version>8.1.7.v20120910</jetty.version>
