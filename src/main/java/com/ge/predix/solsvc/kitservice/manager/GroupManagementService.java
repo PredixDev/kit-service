@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.ge.predix.entity.fielddata.Data;
+import com.ge.predix.entity.data.Data;
 import com.ge.predix.entity.fielddata.FieldData;
 import com.ge.predix.entity.fielddata.PredixString;
 import com.ge.predix.entity.getfielddata.GetFieldDataRequest;

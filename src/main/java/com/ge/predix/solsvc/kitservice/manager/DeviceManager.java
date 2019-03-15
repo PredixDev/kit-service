@@ -47,7 +47,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ge.predix.entity.asset.AssetTag;
-import com.ge.predix.entity.fielddata.Data;
+import com.ge.predix.entity.data.Data;
 import com.ge.predix.entity.fielddata.FieldData;
 import com.ge.predix.entity.fielddata.PredixString;
 import com.ge.predix.entity.getfielddata.GetFieldDataRequest;
